@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  auth-service:
+    build:
+      context: ./auth_service
+      dockerfile: docker/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8001:8080"
+    networks:
+      - messenger-net
+
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: docker/Dockerfile
+    container_name: user-service
+    ports:
+      - "8002:8080"
+    networks:
+      - messenger-net
+  chat-service:
+    build:
+      context: ./chat_service
+      dockerfile: docker/Dockerfile
+    container_name: chat-service
+    ports:
+      - "8003:8080"
+    networks:
+      - messenger-net
+  subscriber-service:
+    build:
+      context: ./subscriber_service
+      dockerfile: docker/Dockerfile
+    container_name: subscriber-service
+    ports:
+      - "8004:8080"
+    networks:
+      - messenger-net
+  
+
+networks:
+  messenger-net:
+    driver: bridge

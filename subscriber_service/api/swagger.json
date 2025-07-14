@@ -1,0 +1,223 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Friendship Service API"
+  },
+  "host": "localhost",
+  "basePath": "/api/",
+  "tags": [
+    {
+      "name": "friend"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/v1/friends/requests": {
+      "post": {
+        "tags": ["friend"],
+        "summary": "Отправить заявку в друзья",
+        "operationId": "makeFriendRequest",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MakeFriendRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Friend request sent"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "409": {
+            "description": "Request already exists or users already friends",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["friend"],
+        "summary": "Получить список входящих заявок в друзья",
+        "operationId": "getFriendRequests",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user_id",
+            "type": "integer",
+            "required": true,
+            "description": "ID пользователя, получающего заявки"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of friend requests",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FriendRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/friends/requests/{request_id}/confirm": {
+      "post": {
+        "tags": ["friend"],
+        "summary": "Подтвердить заявку в друзья",
+        "operationId": "confirmFriendRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "type": "integer",
+            "required": true,
+            "description": "ID заявки"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friend request confirmed"
+          },
+          "404": {
+            "description": "Request not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      }
+    },
+    "/v1/friends/requests/{request_id}/decline": {
+      "post": {
+        "tags": ["friend"],
+        "summary": "Отклонить заявку в друзья",
+        "operationId": "declineFriendRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "type": "integer",
+            "required": true,
+            "description": "ID заявки"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Friend request declined"
+          },
+          "404": {
+            "description": "Request not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      }
+    },
+    "/v1/users/{id}/friends": {
+      "get": {
+        "tags": ["friend"],
+        "summary": "Получить список друзей пользователя",
+        "operationId": "getUserFriends",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "required": true,
+            "description": "ID пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User friends list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Friend"
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorMessage": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "MakeFriendRequest": {
+      "type": "object",
+      "required": ["from_user_id", "to_user_id"],
+      "properties": {
+        "from_user_id": {
+          "type": "integer"
+        },
+        "to_user_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "FriendRequest": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "integer"
+        },
+        "from_user_id": {
+          "type": "integer"
+        },
+        "to_user_id": {
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Friend": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar_photo_url": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+

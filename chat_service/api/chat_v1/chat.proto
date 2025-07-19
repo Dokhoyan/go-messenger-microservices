@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package chat_v1;
+
+option go_package = "github.com/Dokhoyan/go-messenger-microservices/chat_service/pkg/api/chat_v1;chat_v1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service ChatV1 {
+    // Создает новый чат для указываемых собеседников
+    rpc Create(CreateRequest) returns (CreateResponse){};
+    // Возвращает список всех чатов пользователя
+    rpc Get(GetRequest) returns (GetResponse){};
+    // Удаляет чат по id
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty){};
+    // Отправляет в чат сообщение от указанного пользователя
+    rpc SendMessage(SendMessageRequest) returns (google.protobuf.Empty){};
+}
+
+message CreateRequest {
+    // Участники чата
+    repeated string usernames = 1;
+    string chat_name = 2;
+}
+
+message CreateResponse {
+    int64 chat_id = 1;
+}
+
+message GetRequest {
+    int64 chat_id = 1;
+}
+
+message GetResponse {
+    repeated int64 chat_id = 1;
+    repeated string chat_name = 2;
+}
+
+message DeleteRequest{
+    int64 id = 1;
+}
+
+message Message{
+    string from = 1;
+    string text = 2;
+    google.protobuf.Timestamp timestamp = 3;
+}
+
+message SendMessageRequest{
+    Message message = 1;
+}

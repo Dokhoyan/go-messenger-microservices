@@ -1,6 +1,20 @@
 version: '3.9'
 
+volumes:
+  postgres_volume:
+
 services:
+  pg:
+    image: postgres
+    environment:
+      - "POSTGRES_DB=${PG_DATABASE_NAME}"
+      - "POSTGRES_USER=${PG_USER}"
+      - "POSTGRES_PASSWORD=${PG_PASSWORD}"
+    ports:
+      - "${PG_PORT}:5432"
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+
   auth-service:
     build:
       context: ./auth_service
@@ -39,6 +53,7 @@ services:
     networks:
       - messenger-net
   
+
 
 networks:
   messenger-net:

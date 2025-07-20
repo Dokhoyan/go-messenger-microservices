@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package user_v1;
+
+option go_package = "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1;user_v1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "validate/validate.proto";
+
+service UserV1 {
+    // Создает нового пользователя в системе
+    rpc Create(CreateRequest) returns (CreateResponse) {};
+
+    // Возвращает пользователя по id
+    rpc Get(GetRequest) returns (GetResponse) {};
+
+    //возвращает всех пользователей
+    rpc GetUsers(google.protobuf.Empty) returns (GetUsersResponse) {}
+
+    // Обновляет пользователя по id
+    rpc Update(UpdateRequest) returns (google.protobuf.Empty) {};
+
+    // Удаляет пользователя по id
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {};
+}
+
+message UserPassword {
+    // Пароль пользователя
+    string password = 1 [(validate.rules).string = {min_len: 8, max_len: 50, ignore_empty: false}];
+
+    // Подтверждение пароля пользователя
+    string password_confirm = 2 [(validate.rules).string = {min_len: 8, max_len: 50, ignore_empty: false}];
+}
+
+message UserInfo {
+    //имя пользователя
+    string name = 1 [(validate.rules).string = {ignore_empty: false}];
+
+    // Имя учетной записи
+    string username = 2 [(validate.rules).string = {ignore_empty: false}];
+
+    // Почта пользователя
+    string email = 3 [(validate.rules).string = {ignore_empty: false}];
+
+    // Дата рождения пользователя
+    google.protobuf.Timestamp birth_date = 4 [(validate.rules).timestamp = {required: true}];
+
+    //фото профиля
+    string avatar_url = 5 [(validate.rules).string.uri = true];
+}
+
+message User {
+    // Идентификатор пользователя
+    int64 id = 1;
+
+    //данные пользователя
+    UserInfo info = 2;
+
+    // Дата создания пользователя
+    google.protobuf.Timestamp created_at = 3;
+
+    // Дата обновления пользователя
+    google.protobuf.Timestamp updated_at = 4;
+}
+
+message CreateRequest {
+    UserInfo info = 1 [(validate.rules).message = {required: true}];
+    UserPassword pass = 2 [(validate.rules).message = {required: true}];
+}
+
+message CreateResponse {
+    // Идентификатор созданного пользователя
+    int64 id = 1;
+}
+
+message GetRequest {
+    int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message GetResponse {
+    User user = 1;
+}
+
+message UpdateRequest {
+    // Идентификатор обновляемого пользователя
+    int64 id = 1 [(validate.rules).int64.gt = 0];
+
+    UpdateInfo info = 2 [(validate.rules).message = {required: true}];
+}
+
+message UpdateInfo {
+    // Новое имя пользователя
+    google.protobuf.StringValue name = 1;
+
+    // Имя учетной записи
+    google.protobuf.StringValue username = 2;
+
+    // Новая почта пользователя
+    google.protobuf.StringValue email = 3;
+
+    // Дата рождения пользователя
+    google.protobuf.Timestamp birth_date = 4 ;
+
+    //фото профиля
+    google.protobuf.StringValue avatar_url = 5;
+}
+
+message DeleteRequest {
+    // Идентификатор удаляемого пользователя
+    int64 id = 1 [(validate.rules).int64.gt = 0];
+}
+
+message GetUsersResponse{
+    repeated User user = 1;
+}
+

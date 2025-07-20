@@ -3,6 +3,7 @@ module github.com/Dokhoyan/go-messenger-microservices/chat_service
 go 1.24.1
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
 )

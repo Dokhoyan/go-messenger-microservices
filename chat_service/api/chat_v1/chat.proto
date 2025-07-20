@@ -6,6 +6,7 @@ option go_package = "github.com/Dokhoyan/go-messenger-microservices/chat_service
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 service ChatV1 {
     // Создает новый чат для указываемых собеседников
@@ -20,16 +21,16 @@ service ChatV1 {
 
 message CreateRequest {
     // Участники чата
-    repeated string usernames = 1;
+    repeated string usernames = 1 [(validate.rules).repeated = {min_items: 2}];
     string chat_name = 2;
 }
 
 message CreateResponse {
-    int64 chat_id = 1;
+    int64 chat_id = 1  [(validate.rules).int64.gt = 0];
 }
 
 message GetRequest {
-    int64 chat_id = 1;
+    int64 chat_id = 1  [(validate.rules).int64.gt = 0];
 }
 
 message GetResponse {
@@ -38,15 +39,15 @@ message GetResponse {
 }
 
 message DeleteRequest{
-    int64 id = 1;
+    int64 id = 1  [(validate.rules).int64.gt = 0];
 }
 
 message Message{
-    string from = 1;
-    string text = 2;
+    string from = 1  [(validate.rules).string = {min_len: 1}];
+    string text = 2  [(validate.rules).string = {min_len: 1}];
     google.protobuf.Timestamp timestamp = 3;
 }
 
 message SendMessageRequest{
-    Message message = 1;
+    Message message = 1 [(validate.rules).message = {required: true}];
 }

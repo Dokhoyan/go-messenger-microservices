@@ -7,6 +7,7 @@
 package chat_v1
 
 import (
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -369,26 +370,26 @@ var File_chat_proto protoreflect.FileDescriptor
 const file_chat_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"chat.proto\x12\achat_v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"J\n" +
-	"\rCreateRequest\x12\x1c\n" +
-	"\tusernames\x18\x01 \x03(\tR\tusernames\x12\x1b\n" +
-	"\tchat_name\x18\x02 \x01(\tR\bchatName\")\n" +
-	"\x0eCreateResponse\x12\x17\n" +
-	"\achat_id\x18\x01 \x01(\x03R\x06chatId\"%\n" +
+	"chat.proto\x12\achat_v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"T\n" +
+	"\rCreateRequest\x12&\n" +
+	"\tusernames\x18\x01 \x03(\tB\b\xfaB\x05\x92\x01\x02\b\x02R\tusernames\x12\x1b\n" +
+	"\tchat_name\x18\x02 \x01(\tR\bchatName\"2\n" +
+	"\x0eCreateResponse\x12 \n" +
+	"\achat_id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x06chatId\".\n" +
 	"\n" +
-	"GetRequest\x12\x17\n" +
-	"\achat_id\x18\x01 \x01(\x03R\x06chatId\"C\n" +
+	"GetRequest\x12 \n" +
+	"\achat_id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x06chatId\"C\n" +
 	"\vGetResponse\x12\x17\n" +
 	"\achat_id\x18\x01 \x03(\x03R\x06chatId\x12\x1b\n" +
-	"\tchat_name\x18\x02 \x03(\tR\bchatName\"\x1f\n" +
-	"\rDeleteRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"k\n" +
-	"\aMessage\x12\x12\n" +
-	"\x04from\x18\x01 \x01(\tR\x04from\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\x128\n" +
-	"\ttimestamp\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"@\n" +
-	"\x12SendMessageRequest\x12*\n" +
-	"\amessage\x18\x01 \x01(\v2\x10.chat_v1.MessageR\amessage2\xfb\x01\n" +
+	"\tchat_name\x18\x02 \x03(\tR\bchatName\"(\n" +
+	"\rDeleteRequest\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\x03B\a\xfaB\x04\"\x02 \x00R\x02id\"}\n" +
+	"\aMessage\x12\x1b\n" +
+	"\x04from\x18\x01 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x04from\x12\x1b\n" +
+	"\x04text\x18\x02 \x01(\tB\a\xfaB\x04r\x02\x10\x01R\x04text\x128\n" +
+	"\ttimestamp\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"J\n" +
+	"\x12SendMessageRequest\x124\n" +
+	"\amessage\x18\x01 \x01(\v2\x10.chat_v1.MessageB\b\xfaB\x05\x8a\x01\x02\x10\x01R\amessage2\xfb\x01\n" +
 	"\x06ChatV1\x12;\n" +
 	"\x06Create\x12\x16.chat_v1.CreateRequest\x1a\x17.chat_v1.CreateResponse\"\x00\x122\n" +
 	"\x03Get\x12\x13.chat_v1.GetRequest\x1a\x14.chat_v1.GetResponse\"\x00\x12:\n" +

@@ -81,6 +81,16 @@ func handleMakeFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if *req.FromUserID <= 0 || *req.ToUserID <=0 {
+		http.Error(w, `{"message":"user_id must be positive"}`, http.StatusBadRequest)
+		return
+	}
+
+	if *req.FromUserID == *req.ToUserID  {
+		http.Error(w, `{"Cannot send friend request to yourself"}`, http.StatusBadRequest)
+		return
+	}
+
 	// TODO: логика сохранения в базу
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -161,5 +171,6 @@ func getRequestIDFromPath(path string) (int64, error) {
 	if len(parts) < 5 {
 		return 0, errors.New("invalid path")
 	}
+	
 	return strconv.ParseInt(parts[4], 10, 64)
 }

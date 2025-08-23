@@ -6,17 +6,18 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
+
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	//converter "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
-
-	//modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
-	"github.com/jackc/pgx/v4/pgxpool"
+	modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
 )
 
 const (
 	tableName = "users"
-
+	
 	idColumn         = "id"
 	nameColumn       = "name"
 	usernameColumn   = "username"
@@ -29,17 +30,17 @@ const (
 
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(db *pgxpool.Pool) repository.UserRepository {
+func NewRepository(db db.Client) repository.UserRepository {
 	return &repo{db: db}
 }
 
 
 func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) {
 	builder := sq.Insert(tableName).
-		//PlaceholderFormat(sq.Dollar).
+		PlaceholderFormat(sq.Dollar).
 		Columns(nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn).
 		Values(info.Name, info.Username, info.Email, info.Birth_date, info.Avatar_url).
 		Suffix("RETURNING id")
@@ -49,8 +50,12 @@ func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 		return 0, err
 	}
 
+	q:=db.Query{
+		Name: "user Repository Create",
+		QueryRaw: query,
+	}
 	var id int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&id)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +66,7 @@ func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 
 func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn, createdAtColumn, updatedAtColumn).
-		//PlaceholderFormat(sq.Dollar).
+		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{idColumn: id}).
 		Limit(1)
@@ -71,13 +76,17 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 		return nil, err
 	}
 
-	var user model.User
-	err = r.db.QueryRow(ctx, query, args...).Scan(&user.ID, &user.Info.Name, &user.Info.Username, &user.Info.Email,
-		&user.Info.Birth_date, &user.Info.Avatar_url, &user.CreatedAt, &user.UpdatedAt)
+	q := db.Query{
+		Name:     "note_repository.Get",
+		QueryRaw: query,
+	}
+
+	var user modelRepo.User
+	err = r.db.DB().ScanOneContext(ctx, user, q, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	//return converter.ToUserFromRepo(&user), nil 
-	return &user, nil
+	return converter.ToUserFromRepo(&user), nil 
+
 }

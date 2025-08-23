@@ -5,12 +5,12 @@ import (
 	modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
 )
 
-func ToUserFromRepo(note *modelRepo.User) *model.User {
+func ToUserFromRepo(user *modelRepo.User) *model.User {
 	return &model.User{
-		ID:        note.ID,
-		Info:      ToUserInfoFromRepo(note.Info),
-		CreatedAt: note.CreatedAt,
-		UpdatedAt: note.UpdatedAt,
+		ID:        user.ID,
+		Info:      ToUserInfoFromRepo(user.Info),
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 }
 

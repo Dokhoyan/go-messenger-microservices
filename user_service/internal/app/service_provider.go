@@ -7,13 +7,13 @@ import (
 	userImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/user"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db/pg"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db/transaction"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
 	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
-	
 )
 
 
@@ -22,7 +22,7 @@ type serviceProvider struct {
 	grpcConfig config.GRPCConfig
 
 	dbClient       db.Client
-	//txManager      db.TxManager
+	txManager      db.TxManager
 
 
 	userRepository repository.UserRepository
@@ -80,6 +80,14 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
+	if s.txManager == nil {
+		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
+	}
+
+	return s.txManager
+}
+
 func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRepository {
 	if s.userRepository == nil {
 		s.userRepository = userRepository.NewRepository(s.DBClient(ctx))
@@ -90,7 +98,7 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRep
 
 func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		s.userService = userService.NewService(s.UserRepository(ctx))
+		s.userService = userService.NewService(s.UserRepository(ctx), s.TxManager(ctx))
 	}
 
 	return s.userService

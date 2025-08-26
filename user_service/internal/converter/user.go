@@ -6,7 +6,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ToUserFromRepo(user *model.User) *desc.User {
+
+func ToUserFromService(user *model.User) *desc.User {
 	var updatedAt *timestamppb.Timestamp
 	if user.UpdatedAt.Valid {
 		updatedAt = timestamppb.New(user.UpdatedAt.Time)
@@ -27,5 +28,15 @@ func ToUserInfoFromService(info model.UserInfo) *desc.UserInfo {
 		Email:   info.Email,
 		BirthDate: timestamppb.New(info.Birth_date),
 		AvatarUrl: info.Avatar_url,
+	}
+}
+
+func ToUserInfoFromDesc(info *desc.UserInfo) *model.UserInfo {
+	return &model.UserInfo{
+		Name:   info.Name,
+		Username: info.Username,
+		Email:   info.Email,
+		Birth_date: info.BirthDate.AsTime(),
+		Avatar_url: info.AvatarUrl,
 	}
 }

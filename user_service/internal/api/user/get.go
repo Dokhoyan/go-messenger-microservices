@@ -7,12 +7,7 @@ import (
 )
 
 func(s *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error){
-
-	err:=req.Validate()   //прото валидация
-	if err!=nil{
-		return nil, err
-	}
-
+	//userObj:=s.userservice.Get()
 
 	return nil, nil
 }

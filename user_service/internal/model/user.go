@@ -13,10 +13,10 @@ type User struct {
 }
 
 type UserInfo struct {
-	Name 	   string 		`db:"name" json:"name"`
-    Username   string 		`db:"username" json:"username"`
-    Email      string 		`db:"email" json:"email"`
-    Birth_date time.Time 	`db:"birth_date" json:"birth_date"`
-    Avatar_url string 		`db:"avatar_url" json:"avatar_url"`
+	Name 	   string 		`db:"name"`
+    Username   string 		`db:"username"`
+    Email      string 		`db:"email"`
+    Birth_date time.Time 	`db:"birth_date"`
+    Avatar_url string 		`db:"avatar_url"`
 }
 

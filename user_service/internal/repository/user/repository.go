@@ -65,7 +65,7 @@ func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 
 
 func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
-	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn, createdAtColumn, updatedAtColumn).
+	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{idColumn: id}).
@@ -77,12 +77,12 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	}
 
 	q := db.Query{
-		Name:     "note_repository.Get",
+		Name:     "user_repository.Get",
 		QueryRaw: query,
 	}
 
 	var user modelRepo.User
-	err = r.db.DB().ScanOneContext(ctx, user, q, args...)
+	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
 		return nil, err
 	}

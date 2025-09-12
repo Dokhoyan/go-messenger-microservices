@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
 	desc "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,6 +18,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	grpcServer      *grpc.Server
+	httpServer      *http.Server
 }
 
 func NewApp(ctx context.Context)(*App, error){
@@ -70,7 +73,10 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 
 	reflection.Register(a.grpcServer)
 

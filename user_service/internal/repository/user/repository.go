@@ -1,17 +1,12 @@
 package user
 
 import (
-	//"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	"context"
-
 	sq "github.com/Masterminds/squirrel"
-
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
-
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
-	//converter "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
 	modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
 )
 

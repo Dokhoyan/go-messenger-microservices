@@ -5,7 +5,11 @@ CREATE TABLE users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     birth_date TIMESTAMP NOT NULL,
-    avatar_url TEXT NOT NULL
+    avatar_url TEXT NOT NULL,
+    role INTEGER,
+    password VARCHAR,
+    created_at timestamp not null default now(),
+    updated_at timestamp
 );
 
 -- +goose Down

@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -destination=../service/mocks/user_service.go -package=mocks . UserService
+
 import (
 	"context"
 

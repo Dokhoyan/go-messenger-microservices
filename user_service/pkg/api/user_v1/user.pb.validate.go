@@ -92,6 +92,36 @@ func (m *UserInfo) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if t := m.GetBirthDate(); t != nil {
+		ts, err := t.AsTime(), t.CheckValid()
+		if err != nil {
+			err = UserInfoValidationError{
+				field:  "BirthDate",
+				reason: "value is not a valid timestamp",
+				cause:  err,
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+
+			gt := time.Unix(0, 0)
+
+			if ts.Sub(gt) <= 0 {
+				err := UserInfoValidationError{
+					field:  "BirthDate",
+					reason: "value must be greater than 1970-01-01 00:00:00 +0000 UTC",
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+	}
+
 	// no validation rules for AvatarUrl
 
 	if len(errors) > 0 {
@@ -1317,7 +1347,7 @@ func (m *GetUsersResponse) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetUser() {
+	for idx, item := range m.GetUsers() {
 		_, _ = idx, item
 
 		if all {
@@ -1325,7 +1355,7 @@ func (m *GetUsersResponse) validate(all bool) error {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, GetUsersResponseValidationError{
-						field:  fmt.Sprintf("User[%v]", idx),
+						field:  fmt.Sprintf("Users[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1333,7 +1363,7 @@ func (m *GetUsersResponse) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, GetUsersResponseValidationError{
-						field:  fmt.Sprintf("User[%v]", idx),
+						field:  fmt.Sprintf("Users[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1342,7 +1372,7 @@ func (m *GetUsersResponse) validate(all bool) error {
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return GetUsersResponseValidationError{
-					field:  fmt.Sprintf("User[%v]", idx),
+					field:  fmt.Sprintf("Users[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}

@@ -17,7 +17,7 @@ get-deps:
 
 generate:
 	mkdir -p pkg/swagger
-	make generate-note-api
+	make generate-user-api
 	$(LOCAL_BIN)/statik -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 generate-user-api:
@@ -32,9 +32,6 @@ generate-user-api:
 	--grpc-gateway_out=pkg/api/user_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/user_v1/user.proto
-
-
-    
 
 
 

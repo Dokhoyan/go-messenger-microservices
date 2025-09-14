@@ -2,64 +2,65 @@ syntax = "proto3";
 
 package user_v1;
 
-option go_package = "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1;user_v1";
-
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1;user_v1";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Note API"
+    version: "1.0.0"
+    contact: {
+      name: "Dokhoyan dev."
+      email: "dokhoyanjobb@mail.ru"
+    };
+  };
+
+  host: "localhost:8080",
+  schemes: HTTP,
+  schemes: HTTPS,
+  consumes: "application/json",
+  produces: "application/json",
+};
 
 service UserV1 {
     // Создает нового пользователя в системе
     rpc Create(CreateRequest) returns (CreateResponse) {
         option (google.api.http) = {
-            post: "/user/v1"
+            post: "/user/v1/create"
             body: "*"
         };
     }
 
-    // Возвращает пользователя по username
+    // Возвращает пользователя по id
     rpc Get(GetRequest) returns (GetResponse) {
         option (google.api.http) = {
-            get: "/user/v1"
-        };
-    }
-
-
-    //возвращает всех пользователей
-    rpc GetUsers(google.protobuf.Empty) returns (GetUsersResponse) {};
-
-    // Обновляет пользователя по id
-    rpc Update(UpdateRequest) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-            patch: "/user/v1"
-            body: "*"
-        };
-    }
-
-    // Удаляет пользователя по id
-    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-           delete: "/user/v1"
+            get: "/user/v1/{id}"
         };
     }
 }
 
 message UserInfo {
-    //имя пользователя
-    string name = 1[(validate.rules).string = {min_len: 1, max_len: 50}];
+    // Имя пользователя
+    string name = 1 [(validate.rules).string = {min_len: 1, max_len: 50}];
 
     // Имя учетной записи
-    string username = 2[(validate.rules).string = {min_len: 1, max_len: 50}];
+    string username = 2 [(validate.rules).string = {min_len: 1, max_len: 50}];
 
     // Почта пользователя
     string email = 3;
 
     // Дата рождения пользователя
-    google.protobuf.Timestamp birth_date = 4[(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp birth_date = 4 [(validate.rules).timestamp = {
+        required: true;
+        gt: {};
+    }];
 
-    //фото профиля
     string avatar_url = 5;
 }
 
@@ -67,7 +68,7 @@ message User {
     // Идентификатор пользователя
     int64 id = 1;
 
-    //данные пользователя
+    // Данные пользователя
     UserInfo info = 2;
 
     // Дата создания пользователя
@@ -112,9 +113,9 @@ message UpdateInfo {
     google.protobuf.StringValue email = 3;
 
     // Дата рождения пользователя
-    google.protobuf.Timestamp birth_date = 4 ;
+    google.protobuf.Timestamp birth_date = 4;
 
-    //фото профиля
+    // Фото профиля
     google.protobuf.StringValue avatar_url = 5;
 }
 
@@ -123,7 +124,8 @@ message DeleteRequest {
     int64 id = 1;
 }
 
-message GetUsersResponse{
-    repeated User user = 1;
+message GetUsersResponse {
+    repeated User users = 1;
 }
+
 

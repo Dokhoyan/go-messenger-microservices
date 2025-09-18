@@ -35,6 +35,127 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on UserPassword with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *UserPassword) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UserPassword with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in UserPasswordMultiError, or
+// nil if none found.
+func (m *UserPassword) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UserPassword) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetPassword()); l < 8 || l > 50 {
+		err := UserPasswordValidationError{
+			field:  "Password",
+			reason: "value length must be between 8 and 50 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetPasswordConfirm()); l < 8 || l > 50 {
+		err := UserPasswordValidationError{
+			field:  "PasswordConfirm",
+			reason: "value length must be between 8 and 50 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UserPasswordMultiError(errors)
+	}
+
+	return nil
+}
+
+// UserPasswordMultiError is an error wrapping multiple validation errors
+// returned by UserPassword.ValidateAll() if the designated constraints aren't met.
+type UserPasswordMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UserPasswordMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UserPasswordMultiError) AllErrors() []error { return m }
+
+// UserPasswordValidationError is the validation error returned by
+// UserPassword.Validate if the designated constraints aren't met.
+type UserPasswordValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserPasswordValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserPasswordValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserPasswordValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserPasswordValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserPasswordValidationError) ErrorName() string { return "UserPasswordValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserPasswordValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserPassword.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserPasswordValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserPasswordValidationError{}
+
 // Validate checks the field values on UserInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -123,6 +244,17 @@ func (m *UserInfo) validate(all bool) error {
 	}
 
 	// no validation rules for AvatarUrl
+
+	if _, ok := UserRole_name[int32(m.GetRole())]; !ok {
+		err := UserInfoValidationError{
+			field:  "Role",
+			reason: "value must be one of the defined enum values",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return UserInfoMultiError(errors)
@@ -433,6 +565,46 @@ func (m *CreateRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return CreateRequestValidationError{
 				field:  "Info",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if m.GetPass() == nil {
+		err := CreateRequestValidationError{
+			field:  "Pass",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetPass()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateRequestValidationError{
+					field:  "Pass",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateRequestValidationError{
+					field:  "Pass",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPass()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateRequestValidationError{
+				field:  "Pass",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

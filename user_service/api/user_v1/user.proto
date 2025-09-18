@@ -9,11 +9,12 @@ import "validate/validate.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
+
 option go_package = "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1;user_v1";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
-    title: "Note API"
+    title: "User API"
     version: "1.0.0"
     contact: {
       name: "Dokhoyan dev."
@@ -45,6 +46,22 @@ service UserV1 {
     }
 }
 
+enum UserRole {
+    // Не определён
+    UNKNOWN = 0;
+    // Простой пользователь
+    USER = 1;
+    // Администратор
+    ADMIN = 2;
+}
+
+message UserPassword {
+    // Пароль пользователя
+    string password = 1 [(validate.rules).string = {min_len: 8, max_len: 50, ignore_empty: false}];
+    // Подтверждение пароля пользователя
+    string password_confirm = 2 [(validate.rules).string = {min_len: 8, max_len: 50, ignore_empty: false}];
+}
+
 message UserInfo {
     // Имя пользователя
     string name = 1 [(validate.rules).string = {min_len: 1, max_len: 50}];
@@ -62,6 +79,8 @@ message UserInfo {
     }];
 
     string avatar_url = 5;
+
+    UserRole role = 6 [(validate.rules).enum = {defined_only: true}];
 }
 
 message User {
@@ -80,6 +99,7 @@ message User {
 
 message CreateRequest {
     UserInfo info = 1;
+    UserPassword pass = 2 [(validate.rules).message = {required: true}];
 }
 
 message CreateResponse {

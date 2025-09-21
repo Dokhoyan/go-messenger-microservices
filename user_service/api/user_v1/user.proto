@@ -137,6 +137,8 @@ message UpdateInfo {
 
     // Фото профиля
     google.protobuf.StringValue avatar_url = 5;
+
+    UserRole role = 6 [(validate.rules).enum = {defined_only: true}];
 }
 
 message DeleteRequest {

@@ -11,16 +11,21 @@ import (
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/access_v1"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1"
 	desc "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
+
 	//"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
+	_ "github.com/Dokhoyan/go-messenger-microservices/user_service/statik" // инициализация шаблона swagger
 	"google.golang.org/grpc/credentials"
-	_ "github.com/Dokhoyan/go-messenger-microservices/user_service/statik"
+	"google.golang.org/grpc/reflection"
 )
+
+const APISwaggerPath = "/api.swagger.json"
 
 type App struct {
 	serviceProvider *serviceProvider
@@ -128,6 +133,9 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	reflection.Register(a.grpcServer)
 
 	desc.RegisterUserV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
+	auth_v1.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
+	access_v1.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessImpl(ctx))
+
 
 	return nil
 }
@@ -172,7 +180,7 @@ func (a *App) initSwaggerServer(_ context.Context) error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", http.StripPrefix("/", http.FileServer(statikFs)))
-	mux.HandleFunc("/api.swagger.json", serveSwaggerFile("/api.swagger.json"))
+	mux.HandleFunc(APISwaggerPath, serveSwaggerFile(APISwaggerPath))
 
 	a.swaggerServer = &http.Server{
 		Addr:    a.serviceProvider.SwaggerConfig().Address(),

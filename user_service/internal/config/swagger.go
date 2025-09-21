@@ -12,9 +12,6 @@ const (
 	swaggerPortEnvName = "SWAGGER_PORT"
 )
 
-type SwaggerConfig interface {
-	Address() string
-}
 
 type swaggerConfig struct {
 	host string

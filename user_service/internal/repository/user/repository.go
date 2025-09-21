@@ -2,12 +2,18 @@ package user
 
 import (
 	"context"
-	sq "github.com/Masterminds/squirrel"
+	"database/sql"
+	"fmt"
+
+	"github.com/Dokhoyan/common/pkg/filter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -19,6 +25,8 @@ const (
 	emailColumn      = "email"
 	birth_dateColumn = "birth_date"
 	avatar_urlColumn = "avatar_url"
+	roleColumn      = "role"
+	passwordColumn  = "password"
 	createdAtColumn  = "created_at"
 	updatedAtColumn  = "updated_at"
 )
@@ -33,23 +41,25 @@ func NewRepository(db db.Client) repository.UserRepository {
 }
 
 
-func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) {
+func (r *repo) Create(ctx context.Context, params *model.UserCreate) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn).
-		Values(info.Name, info.Username, info.Email, info.Birth_date, info.Avatar_url).
-		Suffix("RETURNING id")
+		Columns(nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn, roleColumn, passwordColumn).
+		Values(params.Info.Name, params.Info.Username, params.Info.Email, params.Info.Birth_date, params.Info.Avatar_url, params.Info.Role, params.Password).
+		Suffix(fmt.Sprintf("RETURNING %s", idColumn))
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return 0, err
+		return 0, errors.Errorf("error at parse sql builder: %v", err)
 	}
 
 	q:=db.Query{
-		Name: "user Repository Create",
+		Name: "user_Repository Create",
 		QueryRaw: query,
 	}
+
 	var id int64
+
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -59,16 +69,19 @@ func (r *repo) Create(ctx context.Context, info *model.UserInfo) (int64, error) 
 }
 
 
-func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
-	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn).
+func (r *repo) Get(ctx context.Context, filters filter.Filter) (*model.User, error) {
+	builder := sq.Select(idColumn, nameColumn, usernameColumn, emailColumn, birth_dateColumn, avatar_urlColumn, roleColumn, createdAtColumn, updatedAtColumn, passwordColumn).
 		PlaceholderFormat(sq.Dollar).
-		From(tableName).
-		Where(sq.Eq{idColumn: id}).
-		Limit(1)
+		From(tableName)
+
+
+	for _, condition := range filters.Conditions {
+		builder = builder.Where(sq.Eq{condition.Key: condition.Value})
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("error at parse sql builder: %v", err)
 	}
 
 	q := db.Query{
@@ -77,9 +90,13 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	}
 
 	var user modelRepo.User
+
 	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.Errorf("user not found")
+		}
+		return nil, errors.Errorf("error at query to database: %v", err)
 	}
 
 	return converter.ToUserFromRepo(&user), nil 

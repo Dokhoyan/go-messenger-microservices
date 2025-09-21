@@ -9,6 +9,17 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, info *model.UserInfo) (int64, error)
+	Create(ctx context.Context, userParams *model.UserCreate) (int64, error)
 	Get(ctx context.Context, id int64)(*model.User, error)
+}
+
+type AuthService interface {
+	Login(context.Context, model.LoginDTO) (string, error)
+	GetRefreshToken(context.Context, string) (string, error)
+	GetAccessToken(context.Context, string) (string, error)
+}
+
+// AccessService - сервис проверки доступов
+type AccessService interface {
+	Check(ctx context.Context, endpoint string) error
 }

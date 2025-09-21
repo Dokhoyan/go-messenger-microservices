@@ -2,6 +2,7 @@ version: '3.9'
 
 volumes:
   postgres_volume:
+  redis-data:
 
 services:
   pg:
@@ -22,3 +23,17 @@ services:
     restart: on-failure
     environment:
       DB_HOST: db
+  
+  redis:
+    image: redis:7.2.5-alpine3.20
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_CONNECTION_TIMEOUT_SEC=${REDIS_CONNECTION_TIMEOUT_SEC}
+      - REDIS_MAX_IDLE=${REDIS_MAX_IDLE}
+      - REDIS_IDLE_TIMEOUT_SEC=${REDIS_IDLE_TIMEOUT_SEC}
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data

@@ -1318,6 +1318,17 @@ func (m *UpdateInfo) validate(all bool) error {
 		}
 	}
 
+	if _, ok := UserRole_name[int32(m.GetRole())]; !ok {
+		err := UpdateInfoValidationError{
+			field:  "Role",
+			reason: "value must be one of the defined enum values",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return UpdateInfoMultiError(errors)
 	}

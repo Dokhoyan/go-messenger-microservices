@@ -12,10 +12,6 @@ const (
 	httpPortEnvName = "HTTP_PORT"
 )
 
-type HTTPConfig interface {
-	Address() string
-}
-
 type httpConfig struct {
 	host string
 	port string

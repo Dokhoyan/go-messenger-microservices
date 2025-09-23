@@ -3,7 +3,6 @@ module github.com/Dokhoyan/go-messenger-microservices/user_service
 go 1.24.1
 
 require (
-	github.com/Dokhoyan/common v0.0.0-20250919104854-49f90ba9671a
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -18,8 +17,11 @@ require (
 )
 
 require (
+	github.com/Dokhoyan/common v0.0.0-20250922134125-f25d4e407a3f // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
 
 require (
@@ -38,6 +40,7 @@ require (
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/pkg/errors v0.9.1
+	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect

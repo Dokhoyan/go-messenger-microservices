@@ -15,3 +15,7 @@ type UserRepository interface {
 	Get(ctx context.Context, filters filter.Filter) (*model.User, error)
 }
 
+type LogsRepository interface {
+	Create(ctx context.Context, log model.Log) (int64, error)
+	Get(ctx context.Context, id int64) (model.Log, error)
+}

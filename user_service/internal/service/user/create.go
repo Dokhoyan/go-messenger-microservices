@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/Dokhoyan/common/pkg/filter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
@@ -40,6 +41,15 @@ func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64,
 		if errTx != nil {
 			return errTx
 		}
+
+		_, errTx = s.logsRepo.Create(ctx, model.Log{
+			Action:  "user created",
+			Content: strconv.FormatInt(id, 10),
+		})
+		if errTx != nil {
+			return errTx
+		}
+
 		return nil
 	})
 	if err != nil {

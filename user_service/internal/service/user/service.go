@@ -9,12 +9,14 @@ import (
 type serv struct{
 	userRepository repository.UserRepository
 	txManager      db.TxManager
+	logsRepo       repository.LogsRepository
 	
 }
 
-func NewService (userRepository repository.UserRepository, txManager db.TxManager) service.UserService{
+func NewService (userRepository repository.UserRepository, txManager db.TxManager, logsRepo  repository.LogsRepository) service.UserService{
 	return &serv{userRepository: userRepository,
 				 txManager: txManager,
+				 logsRepo:  logsRepo,
 	}
 }
 

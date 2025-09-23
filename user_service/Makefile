@@ -100,7 +100,7 @@ local-migration-down:
 	${LOCAL_BIN}/goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
 
 make-migrate:
-	bin/goose -dir ./migrations create (migrate name) sql
+	bin/goose -dir ./migrations migration_name logs sql
 
 
 # ТЕСТЫ 

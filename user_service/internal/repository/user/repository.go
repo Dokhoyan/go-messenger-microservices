@@ -7,10 +7,8 @@ import (
 
 	"github.com/Dokhoyan/common/pkg/filter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/conventer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
-	modelRepo "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user/model"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
@@ -89,7 +87,7 @@ func (r *repo) Get(ctx context.Context, filters filter.Filter) (*model.User, err
 		QueryRaw: query,
 	}
 
-	var user modelRepo.User
+	var user model.User
 
 	err = r.db.DB().ScanOneContext(ctx, &user, q, args...)
 	if err != nil {
@@ -99,6 +97,6 @@ func (r *repo) Get(ctx context.Context, filters filter.Filter) (*model.User, err
 		return nil, errors.Errorf("error at query to database: %v", err)
 	}
 
-	return converter.ToUserFromRepo(&user), nil 
+	return &user, nil 
 
 }

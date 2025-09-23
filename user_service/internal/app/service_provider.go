@@ -18,6 +18,7 @@ import (
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
+	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
 	accessServ "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/access"
@@ -42,6 +43,7 @@ type serviceProvider struct {
 
 
 	userRepository   repository.UserRepository
+	logsRepo 		 repository.LogsRepository
 
 	userService      service.UserService
 	authService      service.AuthService
@@ -122,7 +124,7 @@ func (s *serviceProvider) JWTConfig() config.JWTConfig {
 }
 
 func(s *serviceProvider) RedisConfig() config.RedisConfig{
-	if s.redisConfig!=nil{
+	if s.redisConfig == nil{
 		cfg, err:=config.NewRedisConfig()
 		if err!=nil{
 			log.Fatalf("failed to get swagger config: %s", err.Error())
@@ -139,8 +141,8 @@ func(s *serviceProvider) RedisConfig() config.RedisConfig{
 func (s *serviceProvider) RedisClient() storage.Redis {
 	if s.redisClient==nil{
 		cl, err := cache.NewRedisConnection(&redis.Options{
-			Addr:      s.redisConfig.Address(),
-			Password:  s.redisConfig.Password(),
+			Addr:      s.RedisConfig().Address(),
+			Password:  s.RedisConfig().Password(),
 			DB:        0,
 		})
 
@@ -189,8 +191,9 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 
 		err = cl.DB().Ping(ctx)
 		if err != nil {
-			log.Fatalf("ping error: %s", err.Error())
+			log.Fatalf("ping error: %v", err)
 		}
+
 		closer.Add(cl.Close)
 
 		s.dbClient = cl
@@ -215,9 +218,17 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRep
 	return s.userRepository
 }
 
+func (s *serviceProvider) LogsRepository(ctx context.Context) repository.LogsRepository {
+	if s.logsRepo == nil {
+		s.logsRepo = logsRepository.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.logsRepo
+}
+
 func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		s.userService = userService.NewService(s.UserRepository(ctx), s.TxManager(ctx))
+		s.userService = userService.NewService(s.UserRepository(ctx), s.TxManager(ctx), s.LogsRepository(ctx),)
 	}
 
 	return s.userService

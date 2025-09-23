@@ -2,12 +2,15 @@ package app
 
 import (
 	"context"
+	"flag"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 
+	"github.com/Dokhoyan/common/pkg/logger"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
@@ -17,7 +20,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	//"google.golang.org/grpc/credentials/insecure"
 	_ "github.com/Dokhoyan/go-messenger-microservices/user_service/statik" // инициализация шаблона swagger
@@ -26,6 +32,13 @@ import (
 )
 
 const APISwaggerPath = "/api.swagger.json"
+const (
+	loggerMaxSize    = 10
+	loggerMaxBackups = 3
+	loggerMaxAge     = 3
+)
+
+var logLevel = flag.String("level", "info", "log level for logger")
 
 type App struct {
 	serviceProvider *serviceProvider
@@ -93,6 +106,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
+		a.initLogger,
 	}
 
 	for _, f := range inits {
@@ -127,7 +141,10 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
     a.grpcServer = grpc.NewServer(
         grpc.Creds(creds),
-        grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+        grpc.ChainUnaryInterceptor(
+			interceptor.ValidateInterceptor,
+			interceptor.LoggingInterceptor,
+		),
     )
 
 	reflection.Register(a.grpcServer)
@@ -186,6 +203,12 @@ func (a *App) initSwaggerServer(_ context.Context) error {
 		Addr:    a.serviceProvider.SwaggerConfig().Address(),
 		Handler: mux,
 	}
+
+	return nil
+}
+
+func (a *App) initLogger(_ context.Context) error {
+	logger.Init(a.getCore(a.getLevel()))
 
 	return nil
 }
@@ -266,4 +289,42 @@ func serveSwaggerFile(path string) http.HandlerFunc {
 
 		log.Printf("Served swagger file: %s", path)
 	}
+}
+
+func (a *App) getCore(level zap.AtomicLevel) zapcore.Core {
+	stdout := zapcore.AddSync(os.Stdout)
+
+	file := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    loggerMaxSize, //mb
+		MaxBackups: loggerMaxBackups,
+		MaxAge:     loggerMaxAge,
+	})
+
+	productionCfg := zap.NewProductionEncoderConfig()
+	productionCfg.TimeKey = "timestamp"
+	productionCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	developmentCfg := zap.NewDevelopmentEncoderConfig()
+	developmentCfg.EncodeLevel = zapcore.CapitalLevelEncoder
+
+	consoleEncoder := zapcore.NewConsoleEncoder(developmentCfg)
+	fileEncoder := zapcore.NewJSONEncoder(productionCfg)
+
+	return zapcore.NewTee(
+		zapcore.NewCore(consoleEncoder, stdout, level),
+		zapcore.NewCore(fileEncoder, file, level),
+	)
+}
+
+func (a *App) getLevel() zap.AtomicLevel {
+	flag.Parse()
+
+	var level zapcore.Level
+
+	if err := level.Set(*logLevel); err != nil {
+		log.Fatalf("failed to set log level")
+	}
+
+	return zap.NewAtomicLevelAt(level)
 }

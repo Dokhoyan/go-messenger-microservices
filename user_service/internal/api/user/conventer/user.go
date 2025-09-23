@@ -1,6 +1,7 @@
 package converter
 
 import (
+
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	userPb "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -23,6 +24,9 @@ func UserToProto(user *model.User) *userPb.User {
 
 // UserInfoToProto - конвертирует информацию о пользователе в proto
 func UserInfoToProto(info model.UserInfo) *userPb.UserInfo {
+	
+
+
 	return &userPb.UserInfo{
 		Username: info.Username,
 		Name:     info.Name,

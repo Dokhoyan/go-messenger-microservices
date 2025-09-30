@@ -12,6 +12,9 @@ import (
 )
 
 func(i *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error){
+	if req.GetId()==0{
+		return nil, errors.Errorf("piztecc")
+	}
 	userObj, err := i.userservice.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, errors.Errorf("failed to get user: %v", err)

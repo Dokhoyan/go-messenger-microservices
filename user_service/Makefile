@@ -122,7 +122,16 @@ test-coverage:
 	go tool cover -func=./coverage.out | grep "total";
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
 
-
+grpc-load-test:
+	ghz \
+		--cacert ca.cert \
+		--proto api/user_v1/user.proto \
+		-i vendor.protogen \
+		--call user_v1.UserV1.Get \
+		--data '{"id": 48}' \
+		--rps 100 \
+		--total 3000 \
+		localhost:50052
 
 
 gen-cert:

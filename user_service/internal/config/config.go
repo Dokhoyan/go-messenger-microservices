@@ -48,3 +48,7 @@ type JWTConfig interface {
 	AccessSecretKey() []byte
 	AccessExpirationTime() time.Duration
 }
+
+type PrometheusConfig interface {
+	Address() string
+}

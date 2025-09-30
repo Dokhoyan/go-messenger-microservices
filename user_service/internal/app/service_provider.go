@@ -36,6 +36,7 @@ type serviceProvider struct {
 	swaggerConfig    config.SwaggerConfig
 	redisConfig      config.RedisConfig
 	jwtConfig        config.JWTConfig
+	prometheusConfig config.PrometheusConfig
 
 	redisClient      storage.Redis
 	dbClient         db.Client
@@ -97,6 +98,7 @@ func (s *serviceProvider) HTTPConfig() config.HTTPConfig {
 
 	return s.httpConfig
 }
+
 func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	if s.swaggerConfig == nil {
 		cfg, err := config.NewSwaggerConfig()
@@ -108,6 +110,19 @@ func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	}
 
 	return s.swaggerConfig
+}
+
+func (s *serviceProvider) PrometheusConfig() config.PrometheusConfig {
+	if s.prometheusConfig == nil {
+		cfg, err := config.NewPrometheusConfig()
+		if err != nil {
+			log.Fatalf("failed to get prometheus config: %v", err)
+		}
+
+		s.prometheusConfig = cfg
+	}
+
+	return s.prometheusConfig
 }
 
 func (s *serviceProvider) JWTConfig() config.JWTConfig {

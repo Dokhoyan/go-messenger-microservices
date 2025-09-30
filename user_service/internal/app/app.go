@@ -14,10 +14,13 @@ import (
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/metric"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/tracing"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/access_v1"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1"
 	desc "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -25,7 +28,6 @@ import (
 	"google.golang.org/grpc"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	//"google.golang.org/grpc/credentials/insecure"
 	_ "github.com/Dokhoyan/go-messenger-microservices/user_service/statik" // инициализация шаблона swagger
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -41,10 +43,11 @@ const (
 var logLevel = flag.String("level", "info", "log level for logger")
 
 type App struct {
-	serviceProvider *serviceProvider
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	swaggerServer   *http.Server
+	serviceProvider  *serviceProvider
+	grpcServer       *grpc.Server
+	httpServer       *http.Server
+	swaggerServer    *http.Server
+	prometheusServer *http.Server
 }
 
 func NewApp(ctx context.Context)(*App, error){
@@ -65,7 +68,7 @@ func (a *App) Run()(error){
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -94,6 +97,15 @@ func (a *App) Run()(error){
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := a.runPrometheus()
+		if err != nil {
+			log.Fatalf("failed to run prometheus server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -107,6 +119,9 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initHTTPServer,
 		a.initSwaggerServer,
 		a.initLogger,
+		a.initPrometheus,
+		a.initMetrics,
+		a.initTracing,
 	}
 
 	for _, f := range inits {
@@ -144,6 +159,8 @@ func (a *App) initGRPCServer(ctx context.Context) error {
         grpc.ChainUnaryInterceptor(
 			interceptor.ValidateInterceptor,
 			interceptor.LoggingInterceptor,
+			interceptor.ServerTracingInterceptor,
+			interceptor.MetricsInterceptor,
 		),
     )
 
@@ -157,6 +174,22 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initPrometheus(_ context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	a.prometheusServer = &http.Server{
+		ReadHeaderTimeout: 0,
+		Addr:              a.serviceProvider.PrometheusConfig().Address(),
+		Handler:           mux,
+	}
+
+	return nil
+}
+
+func (a *App) initMetrics(ctx context.Context) error {
+	return metric.Init(ctx)
+}
 
 func (a *App) initHTTPServer(ctx context.Context) error {
 	mux := runtime.NewServeMux()
@@ -213,6 +246,12 @@ func (a *App) initLogger(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initTracing(_ context.Context) error {
+	tracing.Init("auth-service")
+
+	return nil
+}
+
 func (a *App) runGRPCServer() error {
 	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
 
@@ -233,6 +272,17 @@ func (a *App) runHTTPServer() error {
 	log.Printf("HTTP server is running on %s", a.serviceProvider.HTTPConfig().Address())
 
 	err := a.httpServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) runPrometheus() error {
+	log.Printf("Prometheus server listening at %s", a.serviceProvider.PrometheusConfig().Address())
+
+	err := a.prometheusServer.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -306,7 +356,7 @@ func (a *App) getCore(level zap.AtomicLevel) zapcore.Core {
 	productionCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	developmentCfg := zap.NewDevelopmentEncoderConfig()
-	developmentCfg.EncodeLevel = zapcore.CapitalLevelEncoder
+	developmentCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
 	consoleEncoder := zapcore.NewConsoleEncoder(developmentCfg)
 	fileEncoder := zapcore.NewJSONEncoder(productionCfg)

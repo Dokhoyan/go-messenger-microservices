@@ -122,15 +122,17 @@ test-coverage:
 	go tool cover -func=./coverage.out | grep "total";
 	grep -sqFx "/coverage.out" .gitignore || echo "/coverage.out" >> .gitignore
 
+# --insecure \
+
 grpc-load-test:
 	ghz \
-		--cacert ca.cert \
 		--proto api/user_v1/user.proto \
 		-i vendor.protogen \
 		--call user_v1.UserV1.Get \
 		--data '{"id": 48}' \
 		--rps 100 \
 		--total 3000 \
+		--insecure \
 		localhost:50052
 
 
@@ -141,3 +143,6 @@ gen-cert:
 	openssl req -new -key service.key -out service.csr -config certificate.conf
 	openssl x509 -req -in service.csr -CA ca.cert -CAkey ca.key -CAcreateserial \
     		-out service.pem -days 365 -sha256 -extfile certificate.conf -extensions req_ext
+
+run:
+	go run cmd/server/main.go --config-path=config/prod/.env  

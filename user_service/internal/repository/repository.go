@@ -13,6 +13,9 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, params *model.UserCreate) (int64, error)
 	Get(ctx context.Context, filters filter.Filter) (*model.User, error)
+	Update(ctx context.Context, user *model.UserUpdate) error
+	Delete(ctx context.Context, id int64) error
+
 }
 
 type LogsRepository interface {

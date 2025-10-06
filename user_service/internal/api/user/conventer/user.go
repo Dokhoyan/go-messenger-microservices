@@ -60,3 +60,7 @@ func ProtoToUserInfoUpdate(info *userPb.UpdateInfo) model.UserInfo {
 		Birth_date: info.BirthDate.AsTime(),
 	}
 }
+
+// В обычных protobuf-сообщениях невозможно отличить:
+// значение поля по умолчанию ("", 0, false),
+// от отсутствия поля вовсе.

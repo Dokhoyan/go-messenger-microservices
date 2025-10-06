@@ -15,7 +15,7 @@ import (
 func (s *serv) Login(ctx context.Context, req model.LoginDTO) (string, error) {
 	conditions:=filter.MakeFilter(filter.Condition{
 		Key: model.UserNameFieldCode,
-		Value: req.Password,                   //возможно ошибка 
+		Value: req.Username,                   //возможно ошибка 
 	})
 
 	user, err := s.userRepo.Get(ctx, conditions)

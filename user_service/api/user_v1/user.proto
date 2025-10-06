@@ -44,7 +44,23 @@ service UserV1 {
             get: "/user/v1/{id}"
         };
     }
+
+    // Обновляет пользователя по id
+    rpc Update(UpdateRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            patch: "/user/v1"
+            body: "*"
+        };
+    }
+
+    // Удаляет пользователя по id
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+           delete: "/user/v1"
+        };
+    }
 }
+
 
 enum UserRole {
     // Не определён

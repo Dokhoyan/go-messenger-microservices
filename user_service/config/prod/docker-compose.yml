@@ -20,11 +20,18 @@ services:
     
   migrator:
     build:
-      context: .
-      dockerfile: migration.Dockerfile
+      context: ../../
+      dockerfile: "config/prod/migration.Dockerfile"
     restart: on-failure
     environment:
       DB_HOST: db
+  # app:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   ports:
+  #     - "50052:50052"
+  #   restart: on-failure
   
   redis:
     image: redis:7.2.5-alpine3.20
@@ -40,9 +47,9 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./alerts.yml:/etc/prometheus/alerts.yml
-      - prometheus_data:/prometheus
+     - /Users/masnikdohoan/go/src/github.com/Dokhoyan/go-messenger-microservices/user_service/prometheus.yml:/etc/prometheus/prometheus.yml
+     - /Users/masnikdohoan/go/src/github.com/Dokhoyan/go-messenger-microservices/user_service/alerts.yml:/etc/prometheus/alerts.yml
+     - prometheus_data:/prometheus
 
   grafana:
     image: grafana/grafana-oss:10.0.3

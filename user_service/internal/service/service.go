@@ -10,7 +10,9 @@ import (
 
 type UserService interface {
 	Create(ctx context.Context, userParams *model.UserCreate) (int64, error)
-	Get(ctx context.Context, id int64)(*model.User, error)
+	Get(ctx context.Context, id int64) (*model.User, error)
+	Update(ctx context.Context, moodel *model.UserUpdate) (error)
+	Delete(ctx context.Context, id int64) (error)
 }
 
 type AuthService interface {

@@ -9,12 +9,14 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Dokhoyan/common/pkg/logger"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/metric"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/rate_limiter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/tracing"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/access_v1"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1"
@@ -29,7 +31,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	_ "github.com/Dokhoyan/go-messenger-microservices/user_service/statik" // инициализация шаблона swagger
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -38,9 +40,16 @@ const (
 	loggerMaxSize    = 10
 	loggerMaxBackups = 3
 	loggerMaxAge     = 3
+	reqLimite        = 100
+	reqSecondtime    = 1
 )
 
+var configPath string
 var logLevel = flag.String("level", "info", "log level for logger")
+
+func init() {
+	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
+}
 
 type App struct {
 	serviceProvider  *serviceProvider
@@ -112,6 +121,8 @@ func (a *App) Run()(error){
 }
 
 func (a *App) initDeps(ctx context.Context) error {
+	flag.Parse()
+
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
@@ -135,7 +146,7 @@ func (a *App) initDeps(ctx context.Context) error {
 }
 
 func (a *App) initConfig(_ context.Context) error {
-	err := config.Load(".env")
+	err := config.Load(configPath)
 	if err != nil {
 		return err
 	}
@@ -149,14 +160,13 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	creds, err := credentials.NewServerTLSFromFile("service.pem", "service.key")
-    if err != nil {
-        return err
-    }
+
+	rateLimiter := rate_limiter.NewTokenBucketLimiter(ctx, reqLimite, time.Second)
 
     a.grpcServer = grpc.NewServer(
-        grpc.Creds(creds),
+        grpc.Creds(insecure.NewCredentials()),
         grpc.ChainUnaryInterceptor(
+			interceptor.NewRateLimiterInterceptor(rateLimiter).Unary,
 			interceptor.ValidateInterceptor,
 			interceptor.LoggingInterceptor,
 			interceptor.ServerTracingInterceptor,
@@ -193,16 +203,16 @@ func (a *App) initMetrics(ctx context.Context) error {
 
 func (a *App) initHTTPServer(ctx context.Context) error {
 	mux := runtime.NewServeMux()
-	creds, err := credentials.NewClientTLSFromFile("service.pem", "")
-    if err != nil {
-        return err
-    }
+	// creds, err := credentials.NewClientTLSFromFile("service.pem", "")
+    // if err != nil {
+    //     return err
+    // }
 
     opts := []grpc.DialOption{
-        grpc.WithTransportCredentials(creds),
+        grpc.WithTransportCredentials(insecure.NewCredentials()),
     }
 
-	err = desc.RegisterUserV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
+	err := desc.RegisterUserV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
 	if err != nil {
 		return err
 	}
@@ -368,7 +378,6 @@ func (a *App) getCore(level zap.AtomicLevel) zapcore.Core {
 }
 
 func (a *App) getLevel() zap.AtomicLevel {
-	flag.Parse()
 
 	var level zapcore.Level
 

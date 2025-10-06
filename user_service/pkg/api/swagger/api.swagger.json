@@ -25,6 +25,72 @@
     "application/json"
   ],
   "paths": {
+    "/user/v1": {
+      "delete": {
+        "summary": "Удаляет пользователя по id",
+        "operationId": "UserV1_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Идентификатор удаляемого пользователя",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "UserV1"
+        ]
+      },
+      "patch": {
+        "summary": "Обновляет пользователя по id",
+        "operationId": "UserV1_Update",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/user_v1UpdateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserV1"
+        ]
+      }
+    },
     "/user/v1/create": {
       "post": {
         "summary": "Создает нового пользователя в системе",
@@ -146,6 +212,48 @@
       "properties": {
         "user": {
           "$ref": "#/definitions/user_v1User"
+        }
+      }
+    },
+    "user_v1UpdateInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Новое имя пользователя"
+        },
+        "username": {
+          "type": "string",
+          "title": "Имя учетной записи"
+        },
+        "email": {
+          "type": "string",
+          "title": "Новая почта пользователя"
+        },
+        "birthDate": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Дата рождения пользователя"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "title": "Фото профиля"
+        },
+        "role": {
+          "$ref": "#/definitions/user_v1UserRole"
+        }
+      }
+    },
+    "user_v1UpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "Идентификатор обновляемого пользователя"
+        },
+        "info": {
+          "$ref": "#/definitions/user_v1UpdateInfo"
         }
       }
     },

@@ -100,3 +100,56 @@ func (r *repo) Get(ctx context.Context, filters filter.Filter) (*model.User, err
 	return &user, nil 
 
 }
+
+func (r *repo) Update(ctx context.Context, params *model.UserUpdate) error{
+	updateBuilder := sq.Update(tableName).
+	PlaceholderFormat(sq.Dollar).
+	Set(nameColumn, params.Info.Name).
+	Set(avatar_urlColumn, params.Info.Avatar_url).
+	Set(birth_dateColumn, params.Info.Birth_date).
+	Set(emailColumn, params.Info.Email).
+	Set(roleColumn, params.Info.Role).
+	Set(usernameColumn, params.Info.Username).
+	Where(sq.Eq{idColumn: params.ID})
+
+	query, args, err := updateBuilder.ToSql()
+	if err != nil{
+		return errors.Errorf("error at parse sql builder: %v", err)
+	}
+
+	q := db.Query{
+		Name:     "user_repository.Update",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+	if err != nil {
+		return errors.Errorf("error at query to database: %v", err)
+	}
+
+	return nil
+
+}
+
+func (r *repo) Delete(ctx context.Context, id int64) error{
+	deleteBuilder := sq.Delete(tableName).
+	Where(sq.Eq{idColumn: id}).
+	PlaceholderFormat(sq.Dollar)
+
+	query, args, err := deleteBuilder.ToSql()
+	if err != nil{
+		return errors.Errorf("error at parse sql builder: %v", err)
+	}
+
+	q := db.Query{
+		Name: "user_repository.Delete",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
+	if err != nil {
+		return errors.Errorf("error at query to database: %v", err)
+	}
+
+	return nil
+}

@@ -12,10 +12,10 @@ import (
 	authAPI "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/auth"
 	authImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/auth"
 	userImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/user"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db/pg"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db/transaction"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
+	"github.com/Dokhoyan/common/pkg/client/db"
+	"github.com/Dokhoyan/common/pkg/client/db/pg"
+	"github.com/Dokhoyan/common/pkg/client/db/transaction"
+	"github.com/Dokhoyan/common/pkg/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
@@ -243,7 +243,11 @@ func (s *serviceProvider) LogsRepository(ctx context.Context) repository.LogsRep
 
 func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	if s.userService == nil {
-		s.userService = userService.NewService(s.UserRepository(ctx), s.TxManager(ctx), s.LogsRepository(ctx),)
+		s.userService = userService.NewService(
+			s.UserRepository(ctx),
+		    s.TxManager(ctx), 
+			s.LogsRepository(ctx), 
+			s.RedisClient())
 	}
 
 	return s.userService

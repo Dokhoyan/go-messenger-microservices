@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	rateLimiter "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/rate_limiter"
+	rateLimiter "github.com/Dokhoyan/common/rate_limiter"
 )
 
 type RateLimiterInterceptor struct {

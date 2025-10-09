@@ -15353,3 +15353,5 @@
 {"level":"info","timestamp":"2025-10-06T00:27:36.620+0300","msg":"request validated successfully and done","req":"id:1"}
 {"level":"error","timestamp":"2025-10-06T00:27:51.258+0300","msg":"error at gRPC method call","method":"/user_v1.UserV1/Delete","error":"invalid token"}
 {"level":"error","timestamp":"2025-10-06T00:28:20.593+0300","msg":"error at gRPC method call","method":"/user_v1.UserV1/Delete","error":"access denied"}
+{"level":"info","timestamp":"2025-10-09T18:50:36.707+0300","msg":"request validated successfully and done","req":"info:{name:\"sed\"  username:\"et quis magna commodo\"  email:\"id dolore Duis aute\"  birth_date:{seconds:1766188800}  avatar_url:\"dolore velit amet culpa\"}  pass:{password:\"12345678\"  password_confirm:\"12345678\"}"}
+{"level":"error","timestamp":"2025-10-09T18:55:01.011+0300","msg":"error at gRPC method call","method":"/user_v1.UserV1/Create","error":"rpc error: code = Internal desc = internal error"}

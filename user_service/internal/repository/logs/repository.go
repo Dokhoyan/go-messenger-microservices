@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/db"
+	"github.com/Dokhoyan/common/pkg/client/db"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 

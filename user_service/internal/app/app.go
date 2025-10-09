@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/Dokhoyan/common/pkg/logger"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/closer"
+	"github.com/Dokhoyan/common/pkg/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/interceptor"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/metric"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/rate_limiter"
+	"github.com/Dokhoyan/common/rate_limiter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/tracing"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/access_v1"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1"
@@ -171,6 +171,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 			interceptor.LoggingInterceptor,
 			interceptor.ServerTracingInterceptor,
 			interceptor.MetricsInterceptor,
+			interceptor.ErrorCodesInterceptor,
 		),
     )
 

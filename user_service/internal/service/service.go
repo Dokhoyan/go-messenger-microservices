@@ -1,6 +1,8 @@
 package service
 
 //go:generate mockgen -destination=../service/mocks/user_service.go -package=mocks . UserService
+//go:generate mockgen -destination=../service/mocks/auth_service.go -package=mocks . AuthService
+//go:generate mockgen -destination=../service/mocks/access_service.go -package=mocks . AccessService
 
 import (
 	"context"

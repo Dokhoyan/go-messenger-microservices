@@ -5,12 +5,23 @@ import (
 	"strconv"
 
 	"github.com/Dokhoyan/common/pkg/filter"
+	commonVal "github.com/Dokhoyan/common/pkg/sys/validate"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/utils"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/validate"
 	"github.com/pkg/errors"
 )
 
 func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64, error) {
+	err := commonVal.Validate(
+		ctx,
+		validate.Email(userParams.Info.Email),
+		validate.Birthday(userParams.Info.Birth_date),
+	)
+	if err != nil {
+		return 0, err
+	}
+
 	conditions := filter.MakeFilter(filter.Condition{
 		Key:   model.UserNameFieldCode,
 		Value: userParams.Info.Username,

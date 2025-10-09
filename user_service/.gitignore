@@ -1,8 +1,8 @@
-.idea
+/.idea
 /bin/
 /config/local/
 /config/prod/.env
-.env
-coverage.out
-vendor.protogen/
+/.env
+/coverage.out
+/vendor.protogen/
 /logs

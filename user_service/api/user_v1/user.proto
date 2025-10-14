@@ -59,6 +59,12 @@ service UserV1 {
            delete: "/user/v1"
         };
     }
+
+    rpc GetUserAuthData(GetUserAuthDataRequest) returns (GetUserAuthDataResponse) {
+        option (google.api.http) = {
+            get: "/user/v1/auth-data/{username}"
+        };
+    }
 }
 
 
@@ -111,6 +117,13 @@ message User {
 
     // Дата обновления пользователя
     google.protobuf.Timestamp updated_at = 4;
+}
+
+message UserAuthData {
+    int64 id = 1;           
+    string username = 2;   
+    string password_hash = 3; 
+    UserRole role = 4;
 }
 
 message CreateRequest {
@@ -166,4 +179,10 @@ message GetUsersResponse {
     repeated User users = 1;
 }
 
+message GetUserAuthDataRequest {
+    string username = 1 [(validate.rules).string = {min_len: 1, max_len: 50}];
+}
 
+message GetUserAuthDataResponse {
+    UserAuthData user = 1;
+}

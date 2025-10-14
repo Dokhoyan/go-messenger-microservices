@@ -91,6 +91,36 @@
         ]
       }
     },
+    "/user/v1/auth-data/{username}": {
+      "get": {
+        "operationId": "UserV1_GetUserAuthData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1GetUserAuthDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserV1"
+        ]
+      }
+    },
     "/user/v1/create": {
       "post": {
         "summary": "Создает нового пользователя в системе",
@@ -215,6 +245,14 @@
         }
       }
     },
+    "user_v1GetUserAuthDataResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/user_v1UserAuthData"
+        }
+      }
+    },
     "user_v1UpdateInfo": {
       "type": "object",
       "properties": {
@@ -278,6 +316,24 @@
           "type": "string",
           "format": "date-time",
           "title": "Дата обновления пользователя"
+        }
+      }
+    },
+    "user_v1UserAuthData": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "username": {
+          "type": "string"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/user_v1UserRole"
         }
       }
     },

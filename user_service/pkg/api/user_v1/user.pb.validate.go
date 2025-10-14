@@ -520,6 +520,113 @@ var _ interface {
 	ErrorName() string
 } = UserValidationError{}
 
+// Validate checks the field values on UserAuthData with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *UserAuthData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UserAuthData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in UserAuthDataMultiError, or
+// nil if none found.
+func (m *UserAuthData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UserAuthData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Username
+
+	// no validation rules for PasswordHash
+
+	// no validation rules for Role
+
+	if len(errors) > 0 {
+		return UserAuthDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// UserAuthDataMultiError is an error wrapping multiple validation errors
+// returned by UserAuthData.ValidateAll() if the designated constraints aren't met.
+type UserAuthDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UserAuthDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UserAuthDataMultiError) AllErrors() []error { return m }
+
+// UserAuthDataValidationError is the validation error returned by
+// UserAuthData.Validate if the designated constraints aren't met.
+type UserAuthDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserAuthDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserAuthDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserAuthDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserAuthDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserAuthDataValidationError) ErrorName() string { return "UserAuthDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserAuthDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserAuthData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserAuthDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserAuthDataValidationError{}
+
 // Validate checks the field values on CreateRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1641,3 +1748,247 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetUsersResponseValidationError{}
+
+// Validate checks the field values on GetUserAuthDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserAuthDataRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserAuthDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetUserAuthDataRequestMultiError, or nil if none found.
+func (m *GetUserAuthDataRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserAuthDataRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetUsername()); l < 1 || l > 50 {
+		err := GetUserAuthDataRequestValidationError{
+			field:  "Username",
+			reason: "value length must be between 1 and 50 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetUserAuthDataRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUserAuthDataRequestMultiError is an error wrapping multiple validation
+// errors returned by GetUserAuthDataRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetUserAuthDataRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserAuthDataRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserAuthDataRequestMultiError) AllErrors() []error { return m }
+
+// GetUserAuthDataRequestValidationError is the validation error returned by
+// GetUserAuthDataRequest.Validate if the designated constraints aren't met.
+type GetUserAuthDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserAuthDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserAuthDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserAuthDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserAuthDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserAuthDataRequestValidationError) ErrorName() string {
+	return "GetUserAuthDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserAuthDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserAuthDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserAuthDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserAuthDataRequestValidationError{}
+
+// Validate checks the field values on GetUserAuthDataResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUserAuthDataResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUserAuthDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetUserAuthDataResponseMultiError, or nil if none found.
+func (m *GetUserAuthDataResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUserAuthDataResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetUser()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetUserAuthDataResponseValidationError{
+					field:  "User",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetUserAuthDataResponseValidationError{
+					field:  "User",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUser()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetUserAuthDataResponseValidationError{
+				field:  "User",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetUserAuthDataResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUserAuthDataResponseMultiError is an error wrapping multiple validation
+// errors returned by GetUserAuthDataResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetUserAuthDataResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUserAuthDataResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUserAuthDataResponseMultiError) AllErrors() []error { return m }
+
+// GetUserAuthDataResponseValidationError is the validation error returned by
+// GetUserAuthDataResponse.Validate if the designated constraints aren't met.
+type GetUserAuthDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUserAuthDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUserAuthDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUserAuthDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUserAuthDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUserAuthDataResponseValidationError) ErrorName() string {
+	return "GetUserAuthDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUserAuthDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUserAuthDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUserAuthDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUserAuthDataResponseValidationError{}

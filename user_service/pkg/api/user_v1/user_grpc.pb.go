@@ -20,10 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	UserV1_Create_FullMethodName = "/user_v1.UserV1/Create"
-	UserV1_Get_FullMethodName    = "/user_v1.UserV1/Get"
-	UserV1_Update_FullMethodName = "/user_v1.UserV1/Update"
-	UserV1_Delete_FullMethodName = "/user_v1.UserV1/Delete"
+	UserV1_Create_FullMethodName          = "/user_v1.UserV1/Create"
+	UserV1_Get_FullMethodName             = "/user_v1.UserV1/Get"
+	UserV1_Update_FullMethodName          = "/user_v1.UserV1/Update"
+	UserV1_Delete_FullMethodName          = "/user_v1.UserV1/Delete"
+	UserV1_GetUserAuthData_FullMethodName = "/user_v1.UserV1/GetUserAuthData"
 )
 
 // UserV1Client is the client API for UserV1 service.
@@ -38,6 +39,7 @@ type UserV1Client interface {
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Удаляет пользователя по id
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetUserAuthData(ctx context.Context, in *GetUserAuthDataRequest, opts ...grpc.CallOption) (*GetUserAuthDataResponse, error)
 }
 
 type userV1Client struct {
@@ -88,6 +90,16 @@ func (c *userV1Client) Delete(ctx context.Context, in *DeleteRequest, opts ...gr
 	return out, nil
 }
 
+func (c *userV1Client) GetUserAuthData(ctx context.Context, in *GetUserAuthDataRequest, opts ...grpc.CallOption) (*GetUserAuthDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserAuthDataResponse)
+	err := c.cc.Invoke(ctx, UserV1_GetUserAuthData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserV1Server is the server API for UserV1 service.
 // All implementations must embed UnimplementedUserV1Server
 // for forward compatibility
@@ -100,6 +112,7 @@ type UserV1Server interface {
 	Update(context.Context, *UpdateRequest) (*emptypb.Empty, error)
 	// Удаляет пользователя по id
 	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
+	GetUserAuthData(context.Context, *GetUserAuthDataRequest) (*GetUserAuthDataResponse, error)
 	mustEmbedUnimplementedUserV1Server()
 }
 
@@ -118,6 +131,9 @@ func (UnimplementedUserV1Server) Update(context.Context, *UpdateRequest) (*empty
 }
 func (UnimplementedUserV1Server) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedUserV1Server) GetUserAuthData(context.Context, *GetUserAuthDataRequest) (*GetUserAuthDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserAuthData not implemented")
 }
 func (UnimplementedUserV1Server) mustEmbedUnimplementedUserV1Server() {}
 
@@ -204,6 +220,24 @@ func _UserV1_Delete_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserV1_GetUserAuthData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserAuthDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserV1Server).GetUserAuthData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserV1_GetUserAuthData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserV1Server).GetUserAuthData(ctx, req.(*GetUserAuthDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserV1_ServiceDesc is the grpc.ServiceDesc for UserV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -226,6 +260,10 @@ var UserV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _UserV1_Delete_Handler,
+		},
+		{
+			MethodName: "GetUserAuthData",
+			Handler:    _UserV1_GetUserAuthData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

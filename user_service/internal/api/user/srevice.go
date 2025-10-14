@@ -8,12 +8,14 @@ import (
 type Implementation struct{
 	desc.UnimplementedUserV1Server
 	userservice service.UserService
-	accessService service.AccessService
+	authDataService service.AuthDataService
 }
 
-func NewImplementation(userservice service.UserService, access service.AccessService) *Implementation {
+func NewImplementation(userservice service.UserService, access service.AccessService, authDataService service.AuthDataService) *Implementation {
 	return &Implementation{
 		userservice: userservice,
-		accessService: access,
+		authDataService: authDataService,
 	}
 }
+
+

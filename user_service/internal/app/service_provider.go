@@ -7,10 +7,6 @@ import (
 
 	"github.com/Dokhoyan/common/pkg/storage"
 	cache "github.com/Dokhoyan/common/pkg/storage/redis"
-	accessAPI "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/access"
-	accessImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/access"
-	authAPI "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/auth"
-	authImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/auth"
 	userImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/user"
 	"github.com/Dokhoyan/common/pkg/client/db"
 	"github.com/Dokhoyan/common/pkg/client/db/pg"
@@ -21,10 +17,8 @@ import (
 	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
-	accessServ "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/access"
-	authservice "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/auth"
 	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/utils"
+	authDataService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/authData"
 	"github.com/go-redis/redis"
 )
 
@@ -47,14 +41,9 @@ type serviceProvider struct {
 	logsRepo 		 repository.LogsRepository
 
 	userService      service.UserService
-	authService      service.AuthService
-	accessService    service.AccessService
+	authDataService  service.AuthDataService
 
 	userImpl         *userImpl.Implementation
-	authImpl         *authImpl.Implementation
-	accessImpl       *accessImpl.Implementation
-
-	accessChecker    utils.AccessChecker
 }
 
 func newServiceProvider() (*serviceProvider) {
@@ -123,19 +112,6 @@ func (s *serviceProvider) PrometheusConfig() config.PrometheusConfig {
 	}
 
 	return s.prometheusConfig
-}
-
-func (s *serviceProvider) JWTConfig() config.JWTConfig {
-	if s.jwtConfig == nil {
-		cfg, err := config.NewJWTConfig()
-		if err != nil {
-			log.Fatalf("failed to get jwt config: %v", err)
-		}
-
-		s.jwtConfig = cfg
-	}
-
-	return s.jwtConfig
 }
 
 func(s *serviceProvider) RedisConfig() config.RedisConfig{
@@ -253,62 +229,23 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	return s.userService
 }
 
-func (s *serviceProvider) AccessService(ctx context.Context) service.AccessService {
-	if s.accessService == nil {
-		s.accessService = accessServ.NewService(
-			s.JWTConfig(),
-			s.AccessChecker(ctx))
-	}
-
-	return s.accessService
-}
-
-func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
-	if s.authService == nil {
-		s.authService = authservice.NewService(
-			s.RedisClient(),
+func (s *serviceProvider) AuthDataService(ctx context.Context) service.AuthDataService{
+	if s.authDataService == nil {
+		s.authDataService = authDataService.NewService(
 			s.UserRepository(ctx),
-			s.JWTConfig(),
-		)
+		    s.TxManager(ctx), 
+			s.LogsRepository(ctx))
 	}
 
-	return s.authService
+	return s.authDataService
 }
+
 
 func (s *serviceProvider) UserImpl(ctx context.Context) *userImpl.Implementation {
 	if s.userImpl == nil {
-		s.userImpl = userImpl.NewImplementation(s.UserService(ctx), s.AccessService(ctx))
+		s.userImpl = userImpl.NewImplementation(s.UserService(ctx), s.AccessService(ctx), s.AuthDataService(ctx))
 	}
 
 	return s.userImpl
 }
 
-func (s *serviceProvider) AuthImpl(ctx context.Context) *authAPI.Implementation {
-	if s.authImpl == nil {
-		s.authImpl = authAPI.NewImplementation(
-			s.AuthService(ctx),
-		)
-	}
-
-	return s.authImpl
-}
-
-func (s *serviceProvider) AccessImpl(ctx context.Context) *accessAPI.Implementation {
-	if s.accessImpl == nil {
-		s.accessImpl = accessAPI.NewImplementation(s.AccessService(ctx))
-	}
-
-	return s.accessImpl
-}
-
-func (s *serviceProvider) AccessChecker(ctx context.Context) utils.AccessChecker {
-	if s.accessChecker == nil {
-		s.accessChecker = utils.NewRouteAccessChecker(
-			s.JWTConfig(),
-			s.RedisClient(),
-			s.UserRepository(ctx),
-		)
-	}
-
-	return s.accessChecker
-}

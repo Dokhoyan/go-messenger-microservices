@@ -18,8 +18,6 @@ import (
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/metric"
 	"github.com/Dokhoyan/common/rate_limiter"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/tracing"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/access_v1"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1"
 	desc "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/user_v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -178,8 +176,6 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	reflection.Register(a.grpcServer)
 
 	desc.RegisterUserV1Server(a.grpcServer, a.serviceProvider.UserImpl(ctx))
-	auth_v1.RegisterAuthV1Server(a.grpcServer, a.serviceProvider.AuthImpl(ctx))
-	access_v1.RegisterAccessV1Server(a.grpcServer, a.serviceProvider.AccessImpl(ctx))
 
 
 	return nil

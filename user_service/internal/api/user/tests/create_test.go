@@ -24,6 +24,7 @@ func TestCreate(t *testing.T) {
 
 	type mockAction func(mc *gomock.Controller) service.UserService
 	type mockAccess func(mc *gomock.Controller) service.AccessService
+	
 
 	correctReq := desc.CreateRequest{
 		Info: &desc.UserInfo{
@@ -151,7 +152,8 @@ func TestCreate(t *testing.T) {
 			userServ := test.mockAction(mc)
 			accessServ := test.mockAccess(mc)
 
-			impl := user.NewImplementation(userServ, accessServ)
+			mockAuth := mocks.NewMockAuthDataService(mc)
+			impl := user.NewImplementation(userServ, accessServ, mockAuth)
 
 			res, err := impl.Create(test.ctx, test.req)
 

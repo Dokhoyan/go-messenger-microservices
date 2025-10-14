@@ -89,7 +89,8 @@ func TestDelete(t *testing.T) {
 			userServ := test.mockAction(mc)
 			accessServ := test.mockAccess(mc)
 
-			impl := user.NewImplementation(userServ, accessServ)
+			mockAuth := mocks.NewMockAuthDataService(mc)
+			impl := user.NewImplementation(userServ, accessServ, mockAuth)
 
 			res, err := impl.Delete(test.ctx, test.req)
 

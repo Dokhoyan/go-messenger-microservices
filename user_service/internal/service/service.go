@@ -3,6 +3,7 @@ package service
 //go:generate mockgen -destination=../service/mocks/user_service.go -package=mocks . UserService
 //go:generate mockgen -destination=../service/mocks/auth_service.go -package=mocks . AuthService
 //go:generate mockgen -destination=../service/mocks/access_service.go -package=mocks . AccessService
+//go:generate mockgen -destination=../service/mocks/authdata_service.go -package=mocks . AuthDataService
 
 import (
 	"context"
@@ -15,6 +16,10 @@ type UserService interface {
 	Get(ctx context.Context, id int64) (*model.User, error)
 	Update(ctx context.Context, moodel *model.UserUpdate) (error)
 	Delete(ctx context.Context, id int64) (error)
+}
+
+type AuthDataService interface {
+	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 }
 
 type AuthService interface {

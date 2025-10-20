@@ -6,10 +6,15 @@ import (
 
 	"github.com/Dokhoyan/common/pkg/filter"
 	commonVal "github.com/Dokhoyan/common/pkg/sys/validate"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/utils"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/validate"
 	"github.com/pkg/errors"
+)
+
+const (
+	topicName     = "user"
 )
 
 func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64, error) {
@@ -49,6 +54,16 @@ func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64,
 		var errTx error
 
 		id, errTx = s.userRepository.Create(ctx, userParams)
+		if errTx != nil {
+			return errTx
+		}
+
+		handler := &producer.UserCreatedHandler{
+			Username: userParams.Info.Username,
+			PasswordHash: userParams.Password,
+			Role: model.UserRole.String(userParams.Info.Role),
+		}
+		errTx = s.producer.Produce(ctx, topicName, handler )
 		if errTx != nil {
 			return errTx
 		}

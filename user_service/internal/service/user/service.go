@@ -1,8 +1,9 @@
 package user
 
 import (
-	"github.com/Dokhoyan/common/pkg/storage"
 	"github.com/Dokhoyan/common/pkg/client/db"
+	"github.com/Dokhoyan/common/pkg/storage"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
 )
@@ -12,14 +13,15 @@ type serv struct{
 	txManager      db.TxManager
 	logsRepo       repository.LogsRepository
 	storage   	   storage.Redis
-	
+	producer       client.KafkaProducer     
 }
 
-func NewService (userRepository repository.UserRepository, txManager db.TxManager, logsRepo repository.LogsRepository, storage storage.Redis ) service.UserService{
+func NewService (userRepository repository.UserRepository, txManager db.TxManager, logsRepo repository.LogsRepository, storage storage.Redis, producer client.KafkaProducer) service.UserService{
 	return &serv{userRepository: userRepository,
 				 txManager: txManager,
 				 logsRepo:  logsRepo,
 				 storage: storage,
+				 producer: producer,
 	}
 }
 

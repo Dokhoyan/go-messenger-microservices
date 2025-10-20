@@ -11,7 +11,7 @@ type Implementation struct{
 	authDataService service.AuthDataService
 }
 
-func NewImplementation(userservice service.UserService, access service.AccessService, authDataService service.AuthDataService) *Implementation {
+func NewImplementation(userservice service.UserService, authDataService service.AuthDataService) *Implementation {
 	return &Implementation{
 		userservice: userservice,
 		authDataService: authDataService,

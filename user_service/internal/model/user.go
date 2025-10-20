@@ -54,3 +54,14 @@ type UserClaims struct {
 	Username string
 	Role     UserRole
 }
+
+func (r UserRole) String() string {
+	switch r {
+	case USER:
+		return "USER"
+	case ADMIN:
+		return "ADMIN"
+	default:
+		return "UNKNOWN"
+	}
+}

@@ -35,6 +35,14 @@ generate-user-api:
 	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
 	api/user_v1/user.proto
 
+generate-access-api:
+	mkdir -p internal/client/auth/proto
+	protoc --proto_path api/access_v1 \
+	--go_out=internal/client/auth/proto --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=internal/client/auth/proto --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	api/access_v1/access.proto
 
 
 vendor-proto:

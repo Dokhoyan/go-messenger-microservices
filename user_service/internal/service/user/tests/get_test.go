@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	userservice "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
@@ -14,6 +15,7 @@ import (
 	// "github.com/a1exCross/common/pkg/client/db"
 	dbmocks "github.com/Dokhoyan/common/pkg/client/db/mocks"
 	"github.com/Dokhoyan/common/pkg/client/db/transaction"
+
 	// "github.com/a1exCross/common/pkg/client/db/transaction"
 	// "github.com/a1exCross/common/pkg/storage"
 	storagemocks "github.com/Dokhoyan/common/pkg/storage/mocks"
@@ -203,7 +205,9 @@ func TestGet(t *testing.T) {
 			userRepo := userRepository.NewRepository(dbMockClient)
 			logRepo := logsRepository.NewRepository(dbMockClient)
 
-			userServ := userservice.NewService(userRepo, txManager, logRepo, redis)
+			br := []string{"localhost:9092","localhost:9093","localhost:9094"}
+			producer , err := producer.NewProducer(br)
+			userServ := userservice.NewService(userRepo, txManager, logRepo, redis, producer)
 
 			res, err := userServ.Get(ctx, id)
 

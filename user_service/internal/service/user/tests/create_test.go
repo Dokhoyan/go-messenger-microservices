@@ -5,15 +5,16 @@ import (
 	"testing"
 	"time"
 
-	logsrepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
-	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
-	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
 	"github.com/Dokhoyan/common/pkg/client/db"
 	dbmocks "github.com/Dokhoyan/common/pkg/client/db/mocks"
 	"github.com/Dokhoyan/common/pkg/client/db/transaction"
 	"github.com/Dokhoyan/common/pkg/storage"
 	storagemocks "github.com/Dokhoyan/common/pkg/storage/mocks"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
+	logsrepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
+	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
+	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
@@ -191,7 +192,10 @@ func TestCreate(t *testing.T) {
 			userRepo := userRepository.NewRepository(dbMockClient)
 			logRepo := logsrepository.NewRepository(dbMockClient)
 
-			userServ := userService.NewService(userRepo, txManager, logRepo, redisMock)
+			br := []string{"localhost:9092","localhost:9093","localhost:9094"}
+			producer , err := producer.NewProducer(br)
+
+			userServ := userService.NewService(userRepo, txManager, logRepo, redisMock, producer)
 
 			res, err := userServ.Create(ctx, userDTO)
 

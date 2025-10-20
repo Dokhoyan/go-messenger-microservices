@@ -10,12 +10,12 @@ import (
 )
 
 func (i *Implementation) Delete(ctx context.Context, req *desc.DeleteRequest) (*empty.Empty, error){
-	err := i.accessService.Check(ctx, "/user_v1.UserV1/Delete")
-	if err != nil {
-		return nil, err
-	}
+	// err := i.accessService.Check(ctx, "/user_v1.UserV1/Delete")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	err = i.userservice.Delete(ctx, req.Id)
+	err := i.userservice.Delete(ctx, req.Id)
 	if err != nil{
 		return nil, errors.Errorf("failed to delete user: %v", err)
 	}

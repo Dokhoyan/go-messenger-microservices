@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
@@ -187,9 +188,11 @@ func TestUpdate(t *testing.T) {
 			userRepo := userRepository.NewRepository(dbMockClient)
 			logRepo := logsRepository.NewRepository(dbMockClient)
 
-			userServ := userservice.NewService(userRepo, txManager, logRepo, redis)
+			br := []string{"localhost:9092","localhost:9093","localhost:9094"}
+			producer , err := producer.NewProducer(br)
+			userServ := userservice.NewService(userRepo, txManager, logRepo, redis, producer)
 
-			err := userServ.Update(ctx, userDTO)
+			err = userServ.Update(ctx, userDTO)
 
 			if err != nil && test.err != nil {
 				require.Equal(t, test.err.Error(), err.Error())

@@ -5,36 +5,40 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Dokhoyan/common/pkg/storage"
-	cache "github.com/Dokhoyan/common/pkg/storage/redis"
-	userImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/user"
 	"github.com/Dokhoyan/common/pkg/client/db"
 	"github.com/Dokhoyan/common/pkg/client/db/pg"
 	"github.com/Dokhoyan/common/pkg/client/db/transaction"
 	"github.com/Dokhoyan/common/pkg/closer"
+	"github.com/Dokhoyan/common/pkg/storage"
+	cache "github.com/Dokhoyan/common/pkg/storage/redis"
+	userImpl "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/api/user"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	logsRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/logs"
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
-	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
 	authDataService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/authData"
+	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
 	"github.com/go-redis/redis"
 )
 
 
 type serviceProvider struct {
-	pgConfig         config.PGConfig
-	grpcConfig       config.GRPCConfig
-	httpConfig       config.HTTPConfig
-	swaggerConfig    config.SwaggerConfig
-	redisConfig      config.RedisConfig
-	jwtConfig        config.JWTConfig
-	prometheusConfig config.PrometheusConfig
+	pgConfig        	 config.PGConfig
+	grpcConfig       	config.GRPCConfig
+	httpConfig       	config.HTTPConfig
+	swaggerConfig    	config.SwaggerConfig
+	redisConfig      	config.RedisConfig
+	prometheusConfig 	config.PrometheusConfig
+	kafkaProducerConfig config.KafkaProducerConfig
 
-	redisClient      storage.Redis
-	dbClient         db.Client
-	txManager        db.TxManager
+	redisClient       storage.Redis
+	dbClient          db.Client
+	txManager         db.TxManager
+	kafkaProducer     client.KafkaProducer
+	authClient  	  client.Auth
 
 
 	userRepository   repository.UserRepository
@@ -114,20 +118,49 @@ func (s *serviceProvider) PrometheusConfig() config.PrometheusConfig {
 	return s.prometheusConfig
 }
 
-func(s *serviceProvider) RedisConfig() config.RedisConfig{
+func (s *serviceProvider) RedisConfig() config.RedisConfig {
 	if s.redisConfig == nil{
-		cfg, err:=config.NewRedisConfig()
-		if err!=nil{
+		cfg, err := config.NewRedisConfig()
+		if err != nil{
 			log.Fatalf("failed to get swagger config: %s", err.Error())
 		}
 
-		s.redisConfig=cfg
+		s.redisConfig = cfg
 
 	}
 
 	return s.redisConfig
 
 }
+
+func (s *serviceProvider) KafkaProducerConfig() config.KafkaProducerConfig {
+	if s.kafkaProducerConfig == nil{
+		cfg, err := config.NewKafkaProducerConfig()
+		if err != nil {
+			log.Fatalf("failed to get swagger config: %s", err.Error())
+		}
+
+		s.kafkaProducerConfig = cfg
+
+	}
+	return s.kafkaProducerConfig
+}
+
+// func (s *serviceProvider) AuthClient(ctx context.Context) client.Auth {
+// 	if s.authClient == nil {
+
+// 		conn, err := grpc.DialContext(ctx, "localhost:50051", grpc.WithT)
+// 		if err != nil {
+// 			logger.Fatalf("failed to connect %s: %s", "localhost:50051", err.Error())
+// 		}
+// 		closer.Add(conn.Close)
+
+// 		client := accessV1.NewAccessV1Client(conn)
+// 		s.authClient = authClient.NewClient(client)
+// 	}
+
+// 	return s.authClient
+// }
 
 func (s *serviceProvider) RedisClient() storage.Redis {
 	if s.redisClient==nil{
@@ -201,6 +234,21 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	return s.txManager
 }
 
+func (s *serviceProvider) KafkaProducer() client.KafkaProducer{
+	if s.kafkaProducer == nil {
+		p, err := producer.NewProducer(s.KafkaProducerConfig().Brokers())
+		if err != nil {
+			log.Fatalf("failed new kafka producer: %v", err)
+		}
+		closer.Add(s.kafkaProducer.Close)
+
+		s.kafkaProducer = p
+	}
+
+	return s.kafkaProducer
+}
+
+
 func (s *serviceProvider) UserRepository(ctx context.Context) repository.UserRepository {
 	if s.userRepository == nil {
 		s.userRepository = userRepository.NewRepository(s.DBClient(ctx))
@@ -223,7 +271,8 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 			s.UserRepository(ctx),
 		    s.TxManager(ctx), 
 			s.LogsRepository(ctx), 
-			s.RedisClient())
+			s.RedisClient(),
+			s.KafkaProducer(),)
 	}
 
 	return s.userService
@@ -243,7 +292,7 @@ func (s *serviceProvider) AuthDataService(ctx context.Context) service.AuthDataS
 
 func (s *serviceProvider) UserImpl(ctx context.Context) *userImpl.Implementation {
 	if s.userImpl == nil {
-		s.userImpl = userImpl.NewImplementation(s.UserService(ctx), s.AccessService(ctx), s.AuthDataService(ctx))
+		s.userImpl = userImpl.NewImplementation(s.UserService(ctx), s.AuthDataService(ctx))
 	}
 
 	return s.userImpl

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
+	"github.com/IBM/sarama"
 	"github.com/joho/godotenv"
 )
 
@@ -51,4 +52,13 @@ type JWTConfig interface {
 
 type PrometheusConfig interface {
 	Address() string
+}
+
+type AuthConfig interface {
+	Address() string
+}
+
+type KafkaProducerConfig interface {
+	Brokers() []string
+	Config() *sarama.Config
 }

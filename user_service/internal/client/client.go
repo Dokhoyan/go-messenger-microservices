@@ -7,7 +7,6 @@ import (
 // AuthService - сервис авторизации и аутентификации
 type Auth interface {
 	Check(ctx context.Context, endpoint string) (bool, error)
-	Close() error
 }
 
 type KafkaProducer interface {

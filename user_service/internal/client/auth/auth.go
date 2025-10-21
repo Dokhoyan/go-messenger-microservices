@@ -5,47 +5,25 @@ import (
 	"fmt"
 
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client"
-	accesspb "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/auth/proto"
-	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/config"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	accessv1 "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/auth/proto"
 )
 
-type auth struct {
-	client     accesspb.AccessV1Client
-	authConfig config.AuthConfig
-	conn       *grpc.ClientConn 
+type authclient struct {
+	accessClient accessv1.AccessV1Client
 }
 
-// NewAuthClient - создает новый инстанс подключения к сервису auth
-func NewAuthClient(authConfig config.AuthConfig) (client.Auth, error) {
-	conn, err := grpc.Dial(authConfig.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
+func NewClient(cl accessv1.AccessV1Client) client.Auth {
+	return &authclient{
+		accessClient: cl,
 	}
-
-	cl := accesspb.NewAccessV1Client(conn)
-	return &auth{
-		client:     cl,
-		conn:       conn, 
-		authConfig: authConfig,
-	}, nil
 }
 
-func (a *auth) Check(ctx context.Context, endpoint string) (bool, error) {
-	if _, err := a.client.Check(ctx, &accesspb.CheckRequest{
+func (a *authclient) Check(ctx context.Context, endpoint string) (bool, error) {
+	if _, err := a.accessClient.Check(ctx, &accessv1.CheckRequest{
 		EndpointAddress: endpoint,
 	}); err != nil {
 		return false, fmt.Errorf("accessClient.Check: %w", err)
 	}
 
 	return true, nil
-}
-
-func (a *auth) Close() error {
-	if a.conn != nil {
-		return a.conn.Close()
-	}
-	return nil
 }

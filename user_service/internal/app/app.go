@@ -170,6 +170,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 			interceptor.ServerTracingInterceptor,
 			interceptor.MetricsInterceptor,
 			interceptor.ErrorCodesInterceptor,
+			interceptor.NewAuthInterceptor(a.serviceProvider.AuthClient(ctx)).Unary(),
 		),
     )
 

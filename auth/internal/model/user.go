@@ -30,7 +30,7 @@ type UserClaims struct {
 type UserAuthData struct{
 	Username     string   `json:"username"`
 	Role         UserRole `json:"role"`
-	PasswordHash string   `json:"passwordhash"`
+	PasswordHash string   `json:"passwordHash"`
 }
 
 type User struct {
@@ -39,3 +39,4 @@ type User struct {
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt sql.NullTime `json:"updated_at"`
 }
+

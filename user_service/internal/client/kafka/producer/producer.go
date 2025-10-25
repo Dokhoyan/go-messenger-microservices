@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client"
+	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
 	"github.com/IBM/sarama"
 )
 
@@ -65,12 +66,12 @@ func (p *producer) Close() error {
 type UserCreatedHandler struct {
 	Username     string
 	PasswordHash string
-	Role         string
+	Role         model.UserRole
 }
 
 
 func (h *UserCreatedHandler) Data() (interface{}, error) {
-	return map[string]string{
+	return map[string]interface{}{
 		"username":     h.Username,
 		"passwordHash": h.PasswordHash, 
 		"role":         h.Role, 

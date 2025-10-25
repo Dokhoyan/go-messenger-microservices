@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/utils"
@@ -26,6 +27,7 @@ func (s *serv) GetAccessToken(ctx context.Context, token string) (string, error)
 		return "", err
 	}
 
+	log.Printf("claims.Role = %v (%T), info.Role = %v (%T)", claims.Role, claims.Role, info.Role, info.Role)
 	if claims.Role != info.Role {
 		return "", errors.New("authentication error")
 	}
@@ -78,32 +80,33 @@ func (s *serv) GetRefreshToken(ctx context.Context, oldToken string) (string, er
 }
 
 func (s *serv) getUserInfoFromStorage(ctx context.Context, username string) (*model.UserAuthData, error) {
-	var info *model.UserAuthData
-
+	// Пытаемся получить данные из Redis
 	res, err := s.redis.Get(username).Result()
 	if errors.Is(err, redis.Nil) {
-
+		// Если нет в Redis — достаём из БД
 		user, errRep := s.userRepo.Get(ctx, username)
 		if errRep != nil {
 			return nil, errRep
 		}
 
-		info = &user.Info
-
+		return &user.Info, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	if info == nil {
-		err = json.Unmarshal([]byte(res), &info)
-		if err != nil {
-			return nil, err
-		}
+	// Если нашли в Redis — парсим
+	var info model.UserAuthData
+	if err := json.Unmarshal([]byte(res), &info); err != nil {
+		log.Printf("failed to unmarshal Redis user info for %s: %v, raw: %s", username, err, res)
+		return nil, err
 	}
 
-	return info, nil
+	log.Printf("Unmarshaled from Redis for %s: %+v", username, info)
+
+	return &info, nil
 }
+
 
 func (s *serv) checkTokenRefresh(refreshToken string) error {
 	_, err := s.redis.Get(refreshToken).Result()

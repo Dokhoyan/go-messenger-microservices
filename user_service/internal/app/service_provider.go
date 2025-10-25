@@ -22,7 +22,6 @@ import (
 	userRepository "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository/user"
 	accessv1 "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/auth/proto"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service"
-	authDataService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/authData"
 	userService "github.com/Dokhoyan/go-messenger-microservices/user_service/internal/service/user"
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
@@ -52,7 +51,6 @@ type serviceProvider struct {
 	logsRepo 		 repository.LogsRepository
 
 	userService      service.UserService
-	authDataService  service.AuthDataService
 
 	userImpl         *userImpl.Implementation
 }
@@ -296,21 +294,9 @@ func (s *serviceProvider) UserService(ctx context.Context) service.UserService {
 	return s.userService
 }
 
-func (s *serviceProvider) AuthDataService(ctx context.Context) service.AuthDataService{
-	if s.authDataService == nil {
-		s.authDataService = authDataService.NewService(
-			s.UserRepository(ctx),
-		    s.TxManager(ctx), 
-			s.LogsRepository(ctx))
-	}
-
-	return s.authDataService
-}
-
-
 func (s *serviceProvider) UserImpl(ctx context.Context) *userImpl.Implementation {
 	if s.userImpl == nil {
-		s.userImpl = userImpl.NewImplementation(s.UserService(ctx), s.AuthDataService(ctx))
+		s.userImpl = userImpl.NewImplementation(s.UserService(ctx))
 	}
 
 	return s.userImpl

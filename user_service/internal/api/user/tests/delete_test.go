@@ -21,7 +21,6 @@ func TestDelete(t *testing.T) {
 	ctx := context.Background()
 
 	type mockAction func(mc *gomock.Controller) service.UserService
-	type mockAccess func(mc *gomock.Controller) service.AccessService
 
 	id := int64(1)
 
@@ -36,7 +35,6 @@ func TestDelete(t *testing.T) {
 		err        error
 		expected   *empty.Empty
 		mockAction mockAction
-		mockAccess
 	}{
 		{
 			name:     "sucessfull test",
@@ -50,12 +48,6 @@ func TestDelete(t *testing.T) {
 				Delete(ctx, id).
 				Return(nil)
 				return userServiceMock
-			},
-			mockAccess: func(mc *gomock.Controller) service.AccessService {
-				mock := mocks.NewMockAccessService(mc)
-				mock.EXPECT().Check(gomock.Any(), gomock.Any()).Return(nil)
-
-				return mock
 			},
 		},
 		{
@@ -72,12 +64,6 @@ func TestDelete(t *testing.T) {
 
 				return userServiceMock
 			},
-			mockAccess: func(mc *gomock.Controller) service.AccessService {
-				mock := mocks.NewMockAccessService(mc)
-				mock.EXPECT().Check(gomock.Any(), gomock.Any()).Return(nil)
-
-				return mock
-			},
 		},
 	}
 
@@ -88,8 +74,7 @@ func TestDelete(t *testing.T) {
 
 			userServ := test.mockAction(mc)
 
-			mockAuth := mocks.NewMockAuthDataService(mc)
-			impl := user.NewImplementation(userServ, mockAuth)
+			impl := user.NewImplementation(userServ)
 
 			res, err := impl.Delete(test.ctx, test.req)
 

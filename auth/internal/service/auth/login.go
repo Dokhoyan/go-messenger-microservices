@@ -29,7 +29,7 @@ func (s *serv) Login(ctx context.Context, req model.LoginDTO) (string, error) {
 		return "", err
 	}
 
-	infoJSON, err := json.Marshal(user)
+	infoJSON, err := json.Marshal(user.Info)
 	if err != nil {
 		return "", err
 	}

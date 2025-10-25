@@ -5,7 +5,10 @@ import (
 	"flag"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/Dokhoyan/common/pkg/closer"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/config"
@@ -17,17 +20,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const APISwaggerPath = "/api.swagger.json"
-const (
-	loggerMaxSize    = 10
-	loggerMaxBackups = 3
-	loggerMaxAge     = 3
-	reqLimite        = 100
-	reqSecondtime    = 1
-)
-
 var configPath string
-var logLevel = flag.String("level", "info", "log level for logger")
 
 func init() {
 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
@@ -49,25 +42,36 @@ func NewApp(ctx context.Context)(*App, error){
 	return a, nil
 }
 
-func (a *App) Run()(error){
+func (a *App) Run(ctx context.Context)(error){
 	defer func() {
 		closer.CloseAll()
 		closer.Wait()
 	}()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	ctx, cancel := context.WithCancel(ctx)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
 
-		err := a.runGRPCServer()
+		err := a.runGRPCServer(ctx)
 		if err != nil {
 			log.Fatalf("failed to run GRPC server: %v", err)
 		}
 	}()
 
-	wg.Wait()
+	go func() {
+		defer wg.Done()
+		err := a.serviceProvider.UserSaverConsumer(ctx).RunConsumer(ctx)
+		if err != nil {
+			log.Printf("failed to run consumer: %s", err.Error())
+		}
+	}()
+
+	gracefulShutdown(ctx, cancel, wg)
+	//wg.Wait()
 
 	return nil
 }
@@ -122,7 +126,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) runGRPCServer() error {
+func (a *App) runGRPCServer(ctx context.Context) error {
 	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
@@ -130,10 +134,36 @@ func (a *App) runGRPCServer() error {
 		return err
 	}
 
+	go func() {
+		<-ctx.Done()
+		log.Println("shutting down gRPC server...")
+		a.grpcServer.GracefulStop()
+	}()
+
 	err = a.grpcServer.Serve(list)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func gracefulShutdown(ctx context.Context, cancel context.CancelFunc, wg *sync.WaitGroup) {
+	select {
+	case <-ctx.Done():
+		log.Println("terminating: context cancelled")
+	case <-waitSignal():
+		log.Println("terminating: via signal")
+	}
+
+	cancel()
+	if wg != nil {
+		wg.Wait()
+	}
+}
+
+func waitSignal() chan os.Signal {
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
+	return sigterm
 }

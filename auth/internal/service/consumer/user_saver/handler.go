@@ -9,7 +9,7 @@ import (
 	"github.com/IBM/sarama"
 )
 
-func (s *service) NoteSaveHandler(ctx context.Context, msg *sarama.ConsumerMessage) error {
+func (s *service) UserSaveHandler(ctx context.Context, msg *sarama.ConsumerMessage) error {
 
 	log.Printf("Received message: %s", string(msg.Value))
 	

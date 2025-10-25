@@ -23,7 +23,6 @@ func TestCreate(t *testing.T) {
 	ctx := context.Background()
 
 	type mockAction func(mc *gomock.Controller) service.UserService
-	type mockAccess func(mc *gomock.Controller) service.AccessService
 	
 
 	correctReq := desc.CreateRequest{
@@ -83,7 +82,6 @@ func TestCreate(t *testing.T) {
 		err        error
 		expected   *desc.CreateResponse
 		mockAction mockAction
-		mockAccess
 	}{
 		{
 			name:     "sucessfull test",
@@ -99,11 +97,6 @@ func TestCreate(t *testing.T) {
 
 				return userServiceMock
 			},
-			mockAccess: func(mc *gomock.Controller) service.AccessService {
-				mock := mocks.NewMockAccessService(mc)
-
-				return mock
-			},
 		},
 		{
 			name:     "mismatch passwords",
@@ -115,11 +108,6 @@ func TestCreate(t *testing.T) {
 				userServiceMock := mocks.NewMockUserService(mc)
 
 				return userServiceMock
-			},
-			mockAccess: func(mc *gomock.Controller) service.AccessService {
-				mock := mocks.NewMockAccessService(mc)
-
-				return mock
 			},
 		},
 		{
@@ -136,11 +124,6 @@ func TestCreate(t *testing.T) {
 
 				return userServiceMock
 			},
-			mockAccess: func(mc *gomock.Controller) service.AccessService {
-				mock := mocks.NewMockAccessService(mc)
-
-				return mock
-			},
 		},
 	}
 
@@ -152,8 +135,7 @@ func TestCreate(t *testing.T) {
 			userServ := test.mockAction(mc)
 			
 
-			mockAuth := mocks.NewMockAuthDataService(mc)
-			impl := user.NewImplementation(userServ, mockAuth)
+			impl := user.NewImplementation(userServ)
 
 			res, err := impl.Create(test.ctx, test.req)
 

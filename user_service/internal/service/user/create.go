@@ -62,7 +62,7 @@ func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64,
 		handler := &producer.UserCreatedHandler{
 			Username: userParams.Info.Username,
 			PasswordHash: userParams.Password,
-			Role: model.UserRole.String(userParams.Info.Role),
+			Role: userParams.Info.Role,
 		}
 		errTx = s.producer.Produce(ctx, topicName, handler )
 		if errTx != nil {

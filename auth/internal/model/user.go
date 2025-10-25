@@ -1,6 +1,11 @@
 package model
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"database/sql"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+)
 
 type UserRole int8
 
@@ -23,7 +28,14 @@ type UserClaims struct {
 }
 
 type UserAuthData struct{
-	Username string
-	Role     UserRole
-	Password string
+	Username     string   `json:"username"`
+	Role         UserRole `json:"role"`
+	PasswordHash string   `json:"passwordhash"`
+}
+
+type User struct {
+	ID        int64        `json:"id"`
+	Info      UserAuthData `json:"info"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }

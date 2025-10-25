@@ -59,7 +59,6 @@ func (cfg *redisConfig) RoutesAccesses() map[string][]model.UserRole {
 
 		"/user_v1.UserV1/Update": {model.USER},
 		"/user_v1.UserV1/Get":    {model.USER},
-		"/user_v1.UserV1/Create": {model.USER},
 		"/user_v1.UserV1/Delete": {model.ADMIN},
 	}
 }

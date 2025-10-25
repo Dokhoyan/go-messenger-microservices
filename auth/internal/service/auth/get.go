@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/service/auth/converter"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/model"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/utils"
 	"github.com/go-redis/redis"
@@ -84,17 +83,13 @@ func (s *serv) getUserInfoFromStorage(ctx context.Context, username string) (*mo
 	res, err := s.redis.Get(username).Result()
 	if errors.Is(err, redis.Nil) {
 
-		user, errRep := s.userClient.GetUserAuthData(ctx, username)
+		user, errRep := s.userRepo.Get(ctx, username)
 		if errRep != nil {
 			return nil, errRep
 		}
 
-		info = converter.ProtoToUser(user)
+		info = &user.Info
 
-		// infoJSON, err := json.Marshal(info)   // при Запись/обновление:
-    	// if err == nil {						//Обновляем данные в базе.
-        // s.redis.Set(username, infoJSON, 0) 	//Одновременно или через TTL — обновляем/удаляем кэш, чтобы данные не устарели.
-    	// }
 	}
 	if err != nil {
 		return nil, err

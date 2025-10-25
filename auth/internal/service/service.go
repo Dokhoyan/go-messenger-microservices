@@ -19,3 +19,7 @@ type AuthService interface {
 type AccessService interface {
 	Check(ctx context.Context, endpoint string) error
 }
+
+type ConsumerService interface {
+	RunConsumer(ctx context.Context) error
+}

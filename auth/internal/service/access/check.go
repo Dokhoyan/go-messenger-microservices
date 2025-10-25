@@ -11,6 +11,9 @@ import (
 const authPrefix = "Bearer "
 
 func (s *serv) Check(ctx context.Context, endpoint string) error {
+
+	
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return errors.New("metadata is not provided")
@@ -26,6 +29,11 @@ func (s *serv) Check(ctx context.Context, endpoint string) error {
 	}
 
 	accessToken := strings.TrimPrefix(authHeader[0], authPrefix)
+
+	if accessToken == "" && endpoint == "/user_v1.UserV1/Create" {
+    // разрешаем гостям
+    return nil
+}
 
 	access, err := s.accessChecker.AccessCheck(ctx, accessToken, endpoint)
 	if err != nil {

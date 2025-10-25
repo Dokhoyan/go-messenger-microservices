@@ -6,9 +6,9 @@ import (
 	"errors"
 
 	"github.com/Dokhoyan/common/pkg/storage"
-	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/client"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/config"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/model"
+	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/repository"
 
 	//"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/repository"
 	"github.com/go-redis/redis"
@@ -21,15 +21,15 @@ type AccessChecker interface {
 type routeAccessChecker struct {
 	jwtConfig config.JWTConfig
 	redis     storage.Redis
-	userClient client.UserService
+	userRepo  repository.UserRepository
 }
 
 // NewRouteAccessChecker - создает новый экземпляр верификатора
-func NewRouteAccessChecker(jwtCfg config.JWTConfig, redis storage.Redis, userClient client.UserService) AccessChecker {
+func NewRouteAccessChecker(jwtCfg config.JWTConfig, redis storage.Redis, userRepo  repository.UserRepository) AccessChecker {
 	return &routeAccessChecker{
 		jwtConfig: jwtCfg,
 		redis:     redis,
-		userClient: userClient,
+		userRepo : userRepo ,
 	}
 }
 
@@ -45,15 +45,15 @@ func (r *routeAccessChecker) AccessCheck(ctx context.Context, token string, endp
 	if errors.Is(err, redis.Nil) {
 		
 
-		user, errRep := r.userClient.GetUserAuthData(ctx, claims.Username)
+		user, errRep := r.userRepo.Get(ctx, claims.Username)
 		if errRep != nil{
 			return false, err
 		}
 
 		info = &model.UserAuthData{
-			Username: user.Username,
-			Role: model.UserRole(user.Role),
-			Password: user.PasswordHash,
+			Username: user.Info.Username,
+			Role: user.Info.Role,
+			PasswordHash: user.Info.PasswordHash,
 		}
 	}
 

@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/model"
-	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/service/auth/converter"
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/utils"
 )
 
@@ -14,27 +13,27 @@ import (
 func (s *serv) Login(ctx context.Context, req model.LoginDTO) (string, error) {
 	
 
-	user, err := s.userClient.GetUserAuthData(ctx, req.Username)
+	user, err := s.userRepo.Get(ctx, req.Username)
 	if err != nil {
 		return "", err
 	}
 
-	userAuthData := converter.ProtoToUser(user)
 
-    if !utils.VerifyPassword(userAuthData.Password, req.Password) {
+    if !utils.VerifyPassword(user.Info.PasswordHash, req.Password) {
 		return "", errors.New("authentication failed passw")
 	}
 
-	token, err := utils.GenerateToken(*userAuthData, s.jwtConfig.RefreshSecretKey(), s.jwtConfig.RefreshExpirationTime())
+
+	token, err := utils.GenerateToken(user.Info, s.jwtConfig.RefreshSecretKey(), s.jwtConfig.RefreshExpirationTime())
 	if err != nil {
 		return "", err
 	}
 
-	infoJSON, err := json.Marshal(userAuthData)
+	infoJSON, err := json.Marshal(user)
 	if err != nil {
 		return "", err
 	}
-	res := s.redis.Set(userAuthData.Username, infoJSON, 0)
+	res := s.redis.Set(user.Info.Username, infoJSON, 0)
 	if res.Err() != nil {
 		return "", err
 	}

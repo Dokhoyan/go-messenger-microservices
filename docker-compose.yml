@@ -1,60 +1,77 @@
-version: '3.9'
+version: '3.8'
 
 volumes:
   postgres_volume:
 
 services:
-  pg:
-    image: postgres
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181" # порт для клиентских соединений Zookeeper
     environment:
-      - "POSTGRES_DB=${PG_DATABASE_NAME}"
-      - "POSTGRES_USER=${PG_USER}"
-      - "POSTGRES_PASSWORD=${PG_PASSWORD}"
-    ports:
-      - "${PG_PORT}:5432"
-    volumes:
-      - postgres_volume:/var/lib/postgresql/data
+      ZOOKEEPER_CLIENT_PORT: 2181 # порт для клиентских соединений Zookeeper
+      ZOOKEEPER_TICK_TIME: 2000 # основной интервал времени (в миллисекундах), используемый Zookeeper
 
-  auth-service:
-    build:
-      context: ./auth_service
-      dockerfile: docker/Dockerfile
-    container_name: auth-service
+  kafka1:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka1
+    container_name: kafka1
+    depends_on:
+      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
     ports:
-      - "8001:8080"
-    networks:
-      - messenger-net
+      - "9092:9092" # порт для клиентских соединений Kafka
+    environment:
+      KAFKA_BROKER_ID: 1 # уникальный идентификатор брокера Kafka
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092 # указывает, какие адреса будут использоваться для общения с Kafka
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
 
-  user-service:
-    build:
-      context: ./user_service
-      dockerfile: docker/Dockerfile
-    container_name: user-service
+  kafka2:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka2
+    container_name: kafka2
+    depends_on:
+      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
     ports:
-      - "8002:8080"
-    networks:
-      - messenger-net
-  chat-service:
-    build:
-      context: ./chat_service
-      dockerfile: docker/Dockerfile
-    container_name: chat-service
-    ports:
-      - "8003:8080"
-    networks:
-      - messenger-net
-  subscriber-service:
-    build:
-      context: ./subscriber_service
-      dockerfile: docker/Dockerfile
-    container_name: subscriber-service
-    ports:
-      - "8004:8080"
-    networks:
-      - messenger-net
-  
+      - "9093:9093" # порт для клиентских соединений Kafka
+    environment:
+      KAFKA_BROKER_ID: 2 # уникальный идентификатор брокера Kafka
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093 # указывает, какие адреса будут использоваться для общения с Kafka
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика смещений
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
 
+  kafka3:
+    image: confluentinc/cp-kafka:7.6.1
+    hostname: kafka3
+    container_name: kafka3
+    depends_on:
+      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
+    ports:
+      - "9094:9094" # порт для клиентских соединений Kafka
+    environment:
+      KAFKA_BROKER_ID: 3 # уникальный идентификатор брокера Kafka
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:29094,PLAINTEXT_HOST://localhost:9094 # указывает, какие адреса будут использоваться для общения с Kafka
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика смещений
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
 
-networks:
-  messenger-net:
-    driver: bridge
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:v0.7.2
+    ports:
+      - "8082:8080" # порт для клиентских соединений Kafka UI
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true

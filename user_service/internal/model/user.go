@@ -33,7 +33,7 @@ type UserInfo struct {
     Username   string 		`db:"username"`
     Email      string 		`db:"email"`
     Birth_date time.Time 	`db:"birth_date"`
-    Avatar_url string 		`db:"avatar_url"`//убрать 
+    Avatar_url string 		`db:"avatar_url"`
 	Role       UserRole     `db:"role"`
 }
 

@@ -10,13 +10,13 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GenerateToken(userAuthData model.UserAuthData, secretKey []byte, duration time.Duration) (string, error){
+func GenerateToken(user model.UserAuthData, secretKey []byte, duration time.Duration) (string, error){
 	claims:=model.UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(duration).Unix(),
 		},
-		Username: userAuthData.Username,
-		Role: userAuthData.Role,
+		Username: user.Username,
+		Role: user.Role,
 	}
 
 	token:=jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

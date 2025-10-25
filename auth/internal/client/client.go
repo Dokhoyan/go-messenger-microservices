@@ -3,11 +3,10 @@ package client
 import (
 	"context"
 
-	user_v1 "github.com/Dokhoyan/go-messenger-microservices/auth/internal/client/user/proto"
-
+	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/client/kafka/consumer"
 )
 
-type UserService interface {
-	GetUserAuthData(ctx context.Context, username string) (*user_v1.UserAuthData, error)
+type KafkaConsumer interface {
+	Consume(ctx context.Context, topicName string, handler consumer.Handler) (err error)
 	Close() error
 }

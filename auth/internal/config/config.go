@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Dokhoyan/go-messenger-microservices/auth/internal/model"
+	"github.com/IBM/sarama"
 	"github.com/joho/godotenv"
 )
 
@@ -23,11 +24,6 @@ type JWTConfig interface {
 	AccessExpirationTime() time.Duration
 }
 
-type UserConfig interface {
-	Address() string
-}
-
-
 type RedisConfig interface {
 	Address() string
 	Password() string
@@ -38,4 +34,14 @@ type RedisConfig interface {
 // GRPCConfig - конфиг gRPC
 type GRPCConfig interface {
 	Address() string
+}
+
+type KafkaConsumerConfig interface {
+	Brokers() []string
+	GroupID() string
+	Config() *sarama.Config
+}
+
+type PGConfig interface {
+	DSN() string
 }

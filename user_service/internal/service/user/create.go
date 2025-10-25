@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Dokhoyan/common/pkg/filter"
+	"github.com/Dokhoyan/common/pkg/logger"
 	commonVal "github.com/Dokhoyan/common/pkg/sys/validate"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/client/kafka/producer"
 	"github.com/Dokhoyan/go-messenger-microservices/user_service/internal/model"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	topicName     = "user"
+	topicName = "user"
 )
 
 func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64, error) {
@@ -66,6 +67,8 @@ func (s *serv) Create(ctx context.Context, userParams *model.UserCreate) (int64,
 		errTx = s.producer.Produce(ctx, topicName, handler )
 		if errTx != nil {
 			return errTx
+		} else {
+   		 logger.Info("produser send message")
 		}
 
 		_, errTx = s.logsRepo.Create(ctx, model.Log{

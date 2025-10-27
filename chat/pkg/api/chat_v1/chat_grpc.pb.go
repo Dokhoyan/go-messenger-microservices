@@ -20,9 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChatV1_Create_FullMethodName      = "/chat_v1.ChatV1/Create"
-	ChatV1_Get_FullMethodName         = "/chat_v1.ChatV1/Get"
-	ChatV1_Delete_FullMethodName      = "/chat_v1.ChatV1/Delete"
+	ChatV1_CreateChat_FullMethodName  = "/chat_v1.ChatV1/CreateChat"
+	ChatV1_DeleteChat_FullMethodName  = "/chat_v1.ChatV1/DeleteChat"
+	ChatV1_ConnectChat_FullMethodName = "/chat_v1.ChatV1/ConnectChat"
 	ChatV1_SendMessage_FullMethodName = "/chat_v1.ChatV1/SendMessage"
 )
 
@@ -30,13 +30,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChatV1Client interface {
-	// Создает новый чат для указываемых собеседников
-	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
-	// Возвращает список всех чатов пользователя
-	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	// Удаляет чат по id
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Отправляет в чат сообщение от указанного пользователя
+	CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*CreateChatResponse, error)
+	DeleteChat(ctx context.Context, in *DeleteChatRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ConnectChat(ctx context.Context, in *ConnectChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Message], error)
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -48,35 +44,44 @@ func NewChatV1Client(cc grpc.ClientConnInterface) ChatV1Client {
 	return &chatV1Client{cc}
 }
 
-func (c *chatV1Client) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *chatV1Client) CreateChat(ctx context.Context, in *CreateChatRequest, opts ...grpc.CallOption) (*CreateChatResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateResponse)
-	err := c.cc.Invoke(ctx, ChatV1_Create_FullMethodName, in, out, cOpts...)
+	out := new(CreateChatResponse)
+	err := c.cc.Invoke(ctx, ChatV1_CreateChat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chatV1Client) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, ChatV1_Get_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *chatV1Client) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *chatV1Client) DeleteChat(ctx context.Context, in *DeleteChatRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, ChatV1_Delete_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ChatV1_DeleteChat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
+
+func (c *chatV1Client) ConnectChat(ctx context.Context, in *ConnectChatRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Message], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ChatV1_ServiceDesc.Streams[0], ChatV1_ConnectChat_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ConnectChatRequest, Message]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatV1_ConnectChatClient = grpc.ServerStreamingClient[Message]
 
 func (c *chatV1Client) SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -92,13 +97,9 @@ func (c *chatV1Client) SendMessage(ctx context.Context, in *SendMessageRequest, 
 // All implementations must embed UnimplementedChatV1Server
 // for forward compatibility.
 type ChatV1Server interface {
-	// Создает новый чат для указываемых собеседников
-	Create(context.Context, *CreateRequest) (*CreateResponse, error)
-	// Возвращает список всех чатов пользователя
-	Get(context.Context, *GetRequest) (*GetResponse, error)
-	// Удаляет чат по id
-	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
-	// Отправляет в чат сообщение от указанного пользователя
+	CreateChat(context.Context, *CreateChatRequest) (*CreateChatResponse, error)
+	DeleteChat(context.Context, *DeleteChatRequest) (*emptypb.Empty, error)
+	ConnectChat(*ConnectChatRequest, grpc.ServerStreamingServer[Message]) error
 	SendMessage(context.Context, *SendMessageRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedChatV1Server()
 }
@@ -110,14 +111,14 @@ type ChatV1Server interface {
 // pointer dereference when methods are called.
 type UnimplementedChatV1Server struct{}
 
-func (UnimplementedChatV1Server) Create(context.Context, *CreateRequest) (*CreateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+func (UnimplementedChatV1Server) CreateChat(context.Context, *CreateChatRequest) (*CreateChatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateChat not implemented")
 }
-func (UnimplementedChatV1Server) Get(context.Context, *GetRequest) (*GetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedChatV1Server) DeleteChat(context.Context, *DeleteChatRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteChat not implemented")
 }
-func (UnimplementedChatV1Server) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+func (UnimplementedChatV1Server) ConnectChat(*ConnectChatRequest, grpc.ServerStreamingServer[Message]) error {
+	return status.Errorf(codes.Unimplemented, "method ConnectChat not implemented")
 }
 func (UnimplementedChatV1Server) SendMessage(context.Context, *SendMessageRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
@@ -143,59 +144,52 @@ func RegisterChatV1Server(s grpc.ServiceRegistrar, srv ChatV1Server) {
 	s.RegisterService(&ChatV1_ServiceDesc, srv)
 }
 
-func _ChatV1_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateRequest)
+func _ChatV1_CreateChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateChatRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatV1Server).Create(ctx, in)
+		return srv.(ChatV1Server).CreateChat(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatV1_Create_FullMethodName,
+		FullMethod: ChatV1_CreateChat_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatV1Server).Create(ctx, req.(*CreateRequest))
+		return srv.(ChatV1Server).CreateChat(ctx, req.(*CreateChatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatV1_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
+func _ChatV1_DeleteChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChatRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChatV1Server).Get(ctx, in)
+		return srv.(ChatV1Server).DeleteChat(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChatV1_Get_FullMethodName,
+		FullMethod: ChatV1_DeleteChat_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatV1Server).Get(ctx, req.(*GetRequest))
+		return srv.(ChatV1Server).DeleteChat(ctx, req.(*DeleteChatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChatV1_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _ChatV1_ConnectChat_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ConnectChatRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ChatV1Server).Delete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChatV1_Delete_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChatV1Server).Delete(ctx, req.(*DeleteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ChatV1Server).ConnectChat(m, &grpc.GenericServerStream[ConnectChatRequest, Message]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatV1_ConnectChatServer = grpc.ServerStreamingServer[Message]
 
 func _ChatV1_SendMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendMessageRequest)
@@ -223,22 +217,24 @@ var ChatV1_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ChatV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Create",
-			Handler:    _ChatV1_Create_Handler,
+			MethodName: "CreateChat",
+			Handler:    _ChatV1_CreateChat_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _ChatV1_Get_Handler,
-		},
-		{
-			MethodName: "Delete",
-			Handler:    _ChatV1_Delete_Handler,
+			MethodName: "DeleteChat",
+			Handler:    _ChatV1_DeleteChat_Handler,
 		},
 		{
 			MethodName: "SendMessage",
 			Handler:    _ChatV1_SendMessage_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ConnectChat",
+			Handler:       _ChatV1_ConnectChat_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "chat.proto",
 }

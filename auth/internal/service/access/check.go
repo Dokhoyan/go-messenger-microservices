@@ -29,7 +29,7 @@ func (s *serv) Check(ctx context.Context, endpoint string) error {
 	}
 
 	accessToken := strings.TrimPrefix(authHeader[0], authPrefix)
-
+	// нашел ошибку 
 	if accessToken == "" && endpoint == "/user_v1.UserV1/Create" {
     // разрешаем гостям
     return nil

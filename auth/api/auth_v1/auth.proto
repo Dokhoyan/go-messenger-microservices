@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth_v1;
 
-option go_package = "github.com/Dokhoyan/go-messenger-microservices/user_service/pkg/api/auth_v1;auth_v1";
+option go_package = "github.com/Dokhoyan/go-messenger-microservices/auth/pkg/api/auth_v1;auth_v1";
 
 service AuthV1 {
    rpc Login(LoginRequest) returns (LoginResponse);

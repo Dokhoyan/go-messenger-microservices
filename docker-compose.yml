@@ -1,77 +1,286 @@
 version: '3.8'
 
 volumes:
-  postgres_volume:
+  postgres_auth_volume:
+  postgres_chat_volume:
+  postgres_user_volume:
+  redis_auth_volume:
+  redis_user_volume:
+
+networks:
+  messenger-network:
+    driver: bridge
 
 services:
+  # Infrastructure services
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     hostname: zookeeper
     container_name: zookeeper
     ports:
-      - "2181:2181" # порт для клиентских соединений Zookeeper
+      - "2181:2181"
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181 # порт для клиентских соединений Zookeeper
-      ZOOKEEPER_TICK_TIME: 2000 # основной интервал времени (в миллисекундах), используемый Zookeeper
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - messenger-network
 
   kafka1:
     image: confluentinc/cp-kafka:7.6.1
     hostname: kafka1
     container_name: kafka1
     depends_on:
-      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
+      - zookeeper
     ports:
-      - "9092:9092" # порт для клиентских соединений Kafka
+      - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1 # уникальный идентификатор брокера Kafka
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092 # указывает, какие адреса будут использоваться для общения с Kafka
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+    networks:
+      - messenger-network
 
   kafka2:
     image: confluentinc/cp-kafka:7.6.1
     hostname: kafka2
     container_name: kafka2
     depends_on:
-      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
+      - zookeeper
     ports:
-      - "9093:9093" # порт для клиентских соединений Kafka
+      - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 2 # уникальный идентификатор брокера Kafka
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093 # указывает, какие адреса будут использоваться для общения с Kafka
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика смещений
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+    networks:
+      - messenger-network
 
   kafka3:
     image: confluentinc/cp-kafka:7.6.1
     hostname: kafka3
     container_name: kafka3
     depends_on:
-      - zookeeper # указывает, что Kafka зависит от сервиса Zookeeper и будет запущен после него
+      - zookeeper
     ports:
-      - "9094:9094" # порт для клиентских соединений Kafka
+      - "9094:9094"
     environment:
-      KAFKA_BROKER_ID: 3 # уникальный идентификатор брокера Kafka
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # адрес подключения к Zookeeper
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT # указывает протоколы безопасности для слушателей
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:29094,PLAINTEXT_HOST://localhost:9094 # указывает, какие адреса будут использоваться для общения с Kafka
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # фактор репликации топика смещений
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # время задержки перед началом перебалансировки группы
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # минимальное количество реплик, которые должны быть в синхронизации для топика состояния транзакции
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # фактор репликации топика состояния транзакции
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:29094,PLAINTEXT_HOST://localhost:9094
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+    networks:
+      - messenger-network
 
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:v0.7.2
     ports:
-      - "8082:8080" # порт для клиентских соединений Kafka UI
+      - "8082:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: true
+    networks:
+      - messenger-network
+
+  # Database for Auth service
+  auth-postgres:
+    image: postgres:14-alpine3.17
+    container_name: auth-postgres
+    environment:
+      - POSTGRES_DB=${AUTH_PG_DB:-auth_db}
+      - POSTGRES_USER=${AUTH_PG_USER:-auth_user}
+      - POSTGRES_PASSWORD=${AUTH_PG_PASSWORD:-auth_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_auth_volume:/var/lib/postgresql/data
+    networks:
+      - messenger-network
+
+  # Database for Chat service
+  chat-postgres:
+    image: postgres:14-alpine3.17
+    container_name: chat-postgres
+    environment:
+      - POSTGRES_DB=${CHAT_PG_DB:-chat_db}
+      - POSTGRES_USER=${CHAT_PG_USER:-chat_user}
+      - POSTGRES_PASSWORD=${CHAT_PG_PASSWORD:-chat_password}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_chat_volume:/var/lib/postgresql/data
+    networks:
+      - messenger-network
+
+  # Database for User service
+  user-postgres:
+    image: postgres:14-alpine3.17
+    container_name: user-postgres
+    environment:
+      - POSTGRES_DB=${USER_PG_DB:-user_db}
+      - POSTGRES_USER=${USER_PG_USER:-user_user}
+      - POSTGRES_PASSWORD=${USER_PG_PASSWORD:-user_password}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_user_volume:/var/lib/postgresql/data
+    networks:
+      - messenger-network
+
+  # Redis for Auth service
+  auth-redis:
+    image: redis:7.2.5-alpine3.20
+    container_name: auth-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${AUTH_REDIS_PASSWORD:-auth_redis_password}"]
+    volumes:
+      - redis_auth_volume:/data
+    networks:
+      - messenger-network
+
+  # Redis for User service
+  user-redis:
+    image: redis:7.2.5-alpine3.20
+    container_name: user-redis
+    ports:
+      - "6380:6379"
+    command: ["redis-server", "--requirepass", "${USER_REDIS_PASSWORD:-user_redis_password}"]
+    volumes:
+      - redis_user_volume:/data
+    networks:
+      - messenger-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth
+      dockerfile: docker/Dockerfile
+    container_name: auth-service
+    ports:
+      - "50051:50051"
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50051
+      - PG_HOST=auth-postgres
+      - PG_PORT=5432
+      - PG_DATABASE_NAME=${AUTH_PG_DB:-auth_db}
+      - PG_USER=${AUTH_PG_USER:-auth_user}
+      - PG_PASSWORD=${AUTH_PG_PASSWORD:-auth_password}
+      - REDIS_HOST=auth-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${AUTH_REDIS_PASSWORD:-auth_redis_password}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+    depends_on:
+      - auth-postgres
+      - auth-redis
+    networks:
+      - messenger-network
+
+  # Chat Service
+  chat-service:
+    build:
+      context: ./chat
+      dockerfile: docker/Dockerfile
+    container_name: chat-service
+    ports:
+      - "50052:50052"
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50052
+      - PG_HOST=chat-postgres
+      - PG_PORT=5432
+      - PG_DATABASE_NAME=${CHAT_PG_DB:-chat_db}
+      - PG_USER=${CHAT_PG_USER:-chat_user}
+      - PG_PASSWORD=${CHAT_PG_PASSWORD:-chat_password}
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=50051
+    depends_on:
+      - chat-postgres
+      - auth-service
+    networks:
+      - messenger-network
+
+  # User Service
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: config/prod/Dockerfile
+    container_name: user-service
+    ports:
+      - "50053:50053" # GRPC
+      - "8090:8090"   # HTTP
+    environment:
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50053
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=8090
+      - PG_HOST=user-postgres
+      - PG_PORT=5432
+      - PG_DATABASE_NAME=${USER_PG_DB:-user_db}
+      - PG_USER=${USER_PG_USER:-user_user}
+      - PG_PASSWORD=${USER_PG_PASSWORD:-user_password}
+      - REDIS_HOST=user-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${USER_REDIS_PASSWORD:-user_redis_password}
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=50051
+      - KAFKA_BROKERS=kafka1:29092,kafka2:29093,kafka3:29094
+    depends_on:
+      - user-postgres
+      - user-redis
+      - auth-service
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - messenger-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: docker/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - GATEWAY_HOST=0.0.0.0
+      - GATEWAY_PORT=8080
+      - AUTH_SERVICE_URL=http://auth-service:50051
+      - CHAT_SERVICE_URL=http://chat-service:50052
+      - USER_SERVICE_URL=http://user-service:50053
+      - USER_SERVICE_HTTP_URL=http://user-service:8090
+    depends_on:
+      - auth-service
+      - chat-service
+      - user-service
+    networks:
+      - messenger-network
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - messenger-network

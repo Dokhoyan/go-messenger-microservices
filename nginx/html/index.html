@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messenger Microservices API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .service-card h2 {
+            margin-bottom: 10px;
+        }
+
+        .service-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .endpoint {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Messenger Microservices</h1>
+        <p class="subtitle">API Gateway для микросервисной архитектуры</p>
+
+        <div class="service-card">
+            <h2>🔐 Auth Service</h2>
+            <p>Сервис аутентификации и авторизации</p>
+            <div class="endpoint">POST /api/v1/auth/login</div>
+            <div class="endpoint">POST /api/v1/auth/register</div>
+        </div>
+
+        <div class="service-card">
+            <h2>💬 Chat Service</h2>
+            <p>Сервис для работы с чатами</p>
+            <div class="endpoint">/api/v1/chat/*</div>
+        </div>
+
+        <div class="service-card">
+            <h2>👤 User Service</h2>
+            <p>Сервис управления пользователями</p>
+            <div class="endpoint">/api/v1/users/*</div>
+        </div>
+
+        <div class="footer">
+            <p>API Gateway запущен и готов к работе</p>
+        </div>
+    </div>
+</body>
+</html>
+
